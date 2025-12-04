@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entity representing a game level.
+ * Entity representing a game level..
  */
 @Entity
 @Table(name = "levels")
