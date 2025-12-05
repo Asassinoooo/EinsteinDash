@@ -25,6 +25,8 @@ public class BackendFacade {
         void onFailed(String errorMessage);
     }
 
+    public interface LeaderboardCallback {
+        void onSuccess(JsonValue rootData); // Mengembalikan data JSON mentah
     //interface untuk komunikasi balik list level
     public interface LevelListCallback {
         void onSuccess(ArrayList<LevelDto> levels);
@@ -116,7 +118,41 @@ public class BackendFacade {
         });
     }
 
-    public void fetchLevels(final LevelListCallback callback) {
+    public void getLeaderboard(final LeaderboardCallback callback) {
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+        Net.HttpRequest httpRequest = requestBuilder.newRequest()
+            .method(Net.HttpMethods.GET)
+            .url(Constants.BASE_URL + "/leaderboard") // Endpoint backend
+            .build();
+
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                int statusCode = httpResponse.getStatus().getStatusCode();
+                String responseString = httpResponse.getResultAsString();
+
+                if (statusCode == 200) {
+                    // Parse JSON Array
+                    // Format: [{"username": "...", "totalStars": 10}, ...]
+                    JsonValue root = new JsonReader().parse(responseString);
+
+                    Gdx.app.postRunnable(() -> callback.onSuccess(root));
+                } else {
+                    Gdx.app.postRunnable(() -> callback.onFailed("Error: " + statusCode));
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailed("Connection Error"));
+            }
+
+            @Override
+            public void cancelled() { }
+        });
+    }
+      
+   public void fetchLevels(final LevelListCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
             .method(Net.HttpMethods.GET)
