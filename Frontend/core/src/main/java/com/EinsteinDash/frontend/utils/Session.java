@@ -1,4 +1,4 @@
-package com.einsteindash.frontend.utils;
+package com.EinsteinDash.frontend.utils;
 
 public class Session {
     // Instance tunggal (Singleton)

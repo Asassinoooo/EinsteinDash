@@ -1,4 +1,4 @@
-package com.einsteindash.frontend.screens;
+package com.EinsteinDash.frontend.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -8,9 +8,9 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.einsteindash.frontend.Main;
-import com.einsteindash.frontend.network.BackendFacade;
-import com.einsteindash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.Main;
+import com.EinsteinDash.frontend.network.BackendFacade;
+import com.EinsteinDash.frontend.utils.Constants;
 
 public class LoginScreen extends ScreenAdapter {
 
@@ -55,13 +55,17 @@ public class LoginScreen extends ScreenAdapter {
 
         TextButton loginButton = new TextButton("LOGIN", skin);
         statusLabel = new Label("", skin);
+        TextButton registerButton = new TextButton("No account? Register here", skin);
+        registerButton.getLabel().setFontScale(0.8f);
 
         // Masukkan ke Table
         table.add(titleLabel).padBottom(20).row();
         table.add(usernameField).width(200).padBottom(10).row();
         table.add(passwordField).width(200).padBottom(20).row();
         table.add(loginButton).width(100).padBottom(10).row();
+        table.add(registerButton).padBottom(10).row();
         table.add(statusLabel).row();
+
 
         stage.addActor(table);
 
@@ -70,6 +74,14 @@ public class LoginScreen extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 handleLogin();
+            }
+        });
+
+        // Logika Tombol Register
+        registerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new RegisterScreen(game));
             }
         });
     }

@@ -1,17 +1,23 @@
-package com.einsteindash.frontend.network;
+package com.EinsteinDash.frontend.network;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net;
 import com.badlogic.gdx.net.HttpRequestBuilder;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-import com.einsteindash.frontend.utils.Constants;
-import com.einsteindash.frontend.utils.Session;
+import com.EinsteinDash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.utils.Session;
 
 public class BackendFacade {
 
     // Interface sederhana untuk komunikasi balik ke UI
     public interface LoginCallback {
+        void onSuccess();
+        void onFailed(String errorMessage);
+    }
+
+    //interface callback untuk register
+    public interface RegisterCallback {
         void onSuccess();
         void onFailed(String errorMessage);
     }
@@ -54,6 +60,46 @@ public class BackendFacade {
             @Override
             public void failed(Throwable t) {
                 Gdx.app.postRunnable(() -> callback.onFailed("Koneksi Error: " + t.getMessage()));
+            }
+
+            @Override
+            public void cancelled() { }
+        });
+    }
+
+    public void register(String username, String password, final RegisterCallback callback) {
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+
+        // Buat JSON manual
+        String content = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
+
+        Net.HttpRequest httpRequest = requestBuilder.newRequest()
+            .method(Net.HttpMethods.POST)
+            .url(Constants.BASE_URL + "/register") // Endpoint register
+            .header("Content-Type", "application/json")
+            .content(content)
+            .build();
+
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                int statusCode = httpResponse.getStatus().getStatusCode();
+                String responseString = httpResponse.getResultAsString();
+
+                // 200 OK berarti user berhasil dibuat
+                if (statusCode == 200) {
+                    Gdx.app.log("BACKEND", "Register Sukses: " + responseString);
+                    Gdx.app.postRunnable(() -> callback.onSuccess());
+                } else {
+                    // 400 Bad Request biasanya jika username sudah ada
+                    Gdx.app.error("BACKEND", "Register Gagal: " + statusCode);
+                    Gdx.app.postRunnable(() -> callback.onFailed("Gagal: " + responseString));
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailed("Error: " + t.getMessage()));
             }
 
             @Override

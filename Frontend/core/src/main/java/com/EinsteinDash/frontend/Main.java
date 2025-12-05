@@ -1,10 +1,10 @@
-package com.einsteindash.frontend;
+package com.EinsteinDash.frontend;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.einsteindash.frontend.network.BackendFacade;
-import com.einsteindash.frontend.screens.LoginScreen;
+import com.EinsteinDash.frontend.network.BackendFacade;
+import com.EinsteinDash.frontend.screens.LoginScreen;
 
 // Design Pattern: Singleton (Secara konsep, class Game ini hanya ada 1 instance)
 public class Main extends Game {
