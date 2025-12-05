@@ -160,6 +160,7 @@ public class BackendFacade {
             .method(Net.HttpMethods.GET)
             .url(Constants.BASE_URL + "/levels")
             .header("Content-Type", "application/json")
+            .timeout(30000)
             .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {

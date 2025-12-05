@@ -41,7 +41,7 @@ public class LoginScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage); // Agar tombol bisa diklik
 
         // Load Skin (Pastikan file uiskin ada di folder assets)
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        skin = game.assets.get("uiskin.json", Skin.class);
 
         // Layout menggunakan Table (Seperti HTML Table)
         Table table = new Table();
@@ -160,6 +160,5 @@ public class LoginScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
-        skin.dispose();
     }
 }

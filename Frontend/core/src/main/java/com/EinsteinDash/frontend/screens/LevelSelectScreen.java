@@ -13,6 +13,9 @@ import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.utils.Constants;
 
+// PENTING: Tambahkan Import PlayScreen
+import com.EinsteinDash.frontend.screens.PlayScreen;
+
 import java.util.ArrayList;
 
 public class LevelSelectScreen extends ScreenAdapter {
@@ -20,7 +23,7 @@ public class LevelSelectScreen extends ScreenAdapter {
     private final Main game;
     private Stage stage;
     private Skin skin;
-    private Table contentTable; // Tabel di dalam ScrollPane
+    private Table contentTable;
 
     public LevelSelectScreen(Main game) {
         this.game = game;
@@ -30,31 +33,29 @@ public class LevelSelectScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        // 1. Setup Layout Utama
+        // Menggunakan AssetManager (Optimasi)
+        skin = game.assets.get("uiskin.json", Skin.class);
+
         Table mainTable = new Table();
         mainTable.setFillParent(true);
 
         Label titleLabel = new Label("SELECT LEVEL", skin);
         titleLabel.setFontScale(2);
 
-        // 2. Setup ScrollPane (Agar bisa scroll kalau level banyak)
         contentTable = new Table();
         ScrollPane scrollPane = new ScrollPane(contentTable, skin);
 
         TextButton backButton = new TextButton("BACK", skin);
 
         mainTable.add(titleLabel).pad(20).row();
-        mainTable.add(scrollPane).width(600).height(400).pad(10).row();
-        mainTable.add(backButton).width(150).pad(20).row();
+        mainTable.add(scrollPane).width(800).height(400).pad(10).row(); // Lebar disesuaikan resolusi baru
+        mainTable.add(backButton).width(200).height(50).pad(20).row();
 
         stage.addActor(mainTable);
 
-        // 3. Load Data Level dari Backend
         loadLevels();
 
-        // 4. Tombol Back
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -64,42 +65,39 @@ public class LevelSelectScreen extends ScreenAdapter {
     }
 
     private void loadLevels() {
-        // Tampilkan tulisan Loading dulu
         contentTable.add(new Label("Loading levels...", skin)).row();
 
         game.backend.fetchLevels(new BackendFacade.LevelListCallback() {
             @Override
             public void onSuccess(ArrayList<LevelDto> levels) {
-                contentTable.clear(); // Hapus tulisan loading
+                contentTable.clear();
 
                 if (levels.isEmpty()) {
                     contentTable.add(new Label("No levels found.", skin));
                     return;
                 }
 
-                // LOOPING MEMBUAT TOMBOL
+                // ========================================================
+                // DISINI VARIABEL 'level' DIDEFINISIKAN (DALAM LOOP)
+                // ========================================================
                 for (LevelDto level : levels) {
-                    // Teks tombol: "Stereo Madness (1 Stars)"
+
                     String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
                     TextButton levelBtn = new TextButton(btnText, skin);
-
-                    // Style tombol biar gedean dikit
                     levelBtn.getLabel().setFontScale(1.2f);
 
-                    // Listener: Kalau diklik, mulai main!
+                    // Listener ini ada DI DALAM loop, jadi dia kenal variabel 'level'
                     levelBtn.addListener(new ClickListener() {
                         @Override
                         public void clicked(InputEvent event, float x, float y) {
                             Gdx.app.log("LEVEL", "Selected: " + level.getLevelName());
-                            Gdx.app.log("DATA", level.getLevelData());
 
-                            // Nanti kita ganti ini ke PlayScreen:
-                            // game.setScreen(new PlayScreen(game, level));
+                            // Pindah ke PlayScreen dengan membawa objek 'level'
+                            game.setScreen(new PlayScreen(game, level));
                         }
                     });
 
-                    // Masukkan tombol ke tabel
-                    contentTable.add(levelBtn).width(500).height(60).pad(10).row();
+                    contentTable.add(levelBtn).width(600).height(70).pad(10).row();
                 }
             }
 
@@ -129,6 +127,6 @@ public class LevelSelectScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
-        skin.dispose();
+        // skin jangan didispose di sini karena milik Main
     }
 }
