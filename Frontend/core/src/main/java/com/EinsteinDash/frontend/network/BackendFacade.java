@@ -27,6 +27,8 @@ public class BackendFacade {
 
     public interface LeaderboardCallback {
         void onSuccess(JsonValue rootData); // Mengembalikan data JSON mentah
+        void onFailed(String errorMessage);
+    }
     //interface untuk komunikasi balik list level
     public interface LevelListCallback {
         void onSuccess(ArrayList<LevelDto> levels);
@@ -151,7 +153,7 @@ public class BackendFacade {
             public void cancelled() { }
         });
     }
-      
+
    public void fetchLevels(final LevelListCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
