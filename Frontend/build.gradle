@@ -71,3 +71,17 @@ subprojects {
 }
 
 eclipse.project.name = 'EinsteinDash' + '-parent'
+
+project(":core") {
+  apply plugin: "java-library"
+
+  dependencies {
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+
+    // --- TAMBAHAN UNTUK FREETYPE (CORE) ---
+    api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+
+    // --- TAMBAHAN UNTUK BOX2D (CORE) ---
+    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+  }
+}

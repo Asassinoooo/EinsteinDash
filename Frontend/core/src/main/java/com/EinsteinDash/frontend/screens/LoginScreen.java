@@ -1,0 +1,121 @@
+package com.einsteindash.frontend.screens;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.einsteindash.frontend.Main;
+import com.einsteindash.frontend.network.BackendFacade;
+import com.einsteindash.frontend.utils.Constants;
+
+public class LoginScreen extends ScreenAdapter {
+
+    private final Main game;
+    private Stage stage;
+    private Skin skin; // Aset tampilan UI
+
+    // Komponen UI
+    private TextField usernameField;
+    private TextField passwordField;
+    private Label statusLabel;
+
+    public LoginScreen(Main game) {
+        this.game = game;
+    }
+
+    @Override
+    public void show() {
+        // Setup Stage (Panggung UI)
+        stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
+        Gdx.input.setInputProcessor(stage); // Agar tombol bisa diklik
+
+        // Load Skin (Pastikan file uiskin ada di folder assets)
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        // Layout menggunakan Table (Seperti HTML Table)
+        Table table = new Table();
+        table.setFillParent(true); // Memenuhi layar
+        // table.setDebug(true); // Hapus komentar ini jika ingin melihat garis layout
+
+        // Buat Widget
+        Label titleLabel = new Label("EINSTEIN DASH", skin);
+        titleLabel.setFontScale(2);
+
+        usernameField = new TextField("", skin);
+        usernameField.setMessageText("Username");
+
+        passwordField = new TextField("", skin);
+        passwordField.setMessageText("Password");
+        passwordField.setPasswordMode(true);
+        passwordField.setPasswordCharacter('*');
+
+        TextButton loginButton = new TextButton("LOGIN", skin);
+        statusLabel = new Label("", skin);
+
+        // Masukkan ke Table
+        table.add(titleLabel).padBottom(20).row();
+        table.add(usernameField).width(200).padBottom(10).row();
+        table.add(passwordField).width(200).padBottom(20).row();
+        table.add(loginButton).width(100).padBottom(10).row();
+        table.add(statusLabel).row();
+
+        stage.addActor(table);
+
+        // Logika Tombol Login
+        loginButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                handleLogin();
+            }
+        });
+    }
+
+    private void handleLogin() {
+        String user = usernameField.getText();
+        String pass = passwordField.getText();
+
+        statusLabel.setText("Connecting...");
+
+        // Panggil Facade
+        game.backend.login(user, pass, new BackendFacade.LoginCallback() {
+            @Override
+            public void onSuccess() {
+                statusLabel.setText("Success!");
+
+                // Transisi ke Menu Screen
+                game.setScreen(new MenuScreen(game));
+            }
+
+            @Override
+            public void onFailed(String errorMessage) {
+                statusLabel.setText(errorMessage);
+            }
+        });
+    }
+
+    @Override
+    public void render(float delta) {
+        // Bersihkan layar (Hitam)
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        // Gambar UI
+        stage.act(delta);
+        stage.draw();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void dispose() {
+        stage.dispose();
+        skin.dispose();
+    }
+}
