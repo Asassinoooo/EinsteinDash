@@ -79,7 +79,7 @@ public class MenuScreen extends ScreenAdapter {
             public void clicked(InputEvent event, float x, float y) {
                 // Nanti kita buat LevelSelectScreen di sini
                 Gdx.app.log("MENU", "Pindah ke Level Select...");
-                // game.setScreen(new LevelSelectScreen(game));
+                game.setScreen(new LevelSelectScreen(game));
             }
         });
 

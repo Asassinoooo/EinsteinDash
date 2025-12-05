@@ -7,6 +7,9 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.EinsteinDash.frontend.utils.Constants;
 import com.EinsteinDash.frontend.utils.Session;
+import java.util.ArrayList;
+import com.badlogic.gdx.utils.Json;
+import com.EinsteinDash.frontend.model.LevelDto;
 
 public class BackendFacade {
 
@@ -24,6 +27,9 @@ public class BackendFacade {
 
     public interface LeaderboardCallback {
         void onSuccess(JsonValue rootData); // Mengembalikan data JSON mentah
+    //interface untuk komunikasi balik list level
+    public interface LevelListCallback {
+        void onSuccess(ArrayList<LevelDto> levels);
         void onFailed(String errorMessage);
     }
 
@@ -133,6 +139,45 @@ public class BackendFacade {
                     Gdx.app.postRunnable(() -> callback.onSuccess(root));
                 } else {
                     Gdx.app.postRunnable(() -> callback.onFailed("Error: " + statusCode));
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailed("Connection Error"));
+            }
+
+            @Override
+            public void cancelled() { }
+        });
+    }
+      
+   public void fetchLevels(final LevelListCallback callback) {
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+        Net.HttpRequest httpRequest = requestBuilder.newRequest()
+            .method(Net.HttpMethods.GET)
+            .url(Constants.BASE_URL + "/levels")
+            .header("Content-Type", "application/json")
+            .build();
+
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                int statusCode = httpResponse.getStatus().getStatusCode();
+                String responseString = httpResponse.getResultAsString();
+
+                if (statusCode == 200) {
+                    try {
+                        Json json = new Json();
+                        // LibGDX Json cara parsing Array/List:
+                        ArrayList<LevelDto> levels = json.fromJson(ArrayList.class, LevelDto.class, responseString);
+
+                        Gdx.app.postRunnable(() -> callback.onSuccess(levels));
+                    } catch (Exception e) {
+                        Gdx.app.postRunnable(() -> callback.onFailed("Parse Error: " + e.getMessage()));
+                    }
+                } else {
+                    Gdx.app.postRunnable(() -> callback.onFailed("Error " + statusCode));
                 }
             }
 
