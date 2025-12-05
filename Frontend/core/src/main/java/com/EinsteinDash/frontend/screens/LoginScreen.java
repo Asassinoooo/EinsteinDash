@@ -4,13 +4,20 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.utils.Constants;
+
+import javax.swing.plaf.basic.BasicTreeUI;
+import java.awt.*;
+import java.security.Key;
 
 public class LoginScreen extends ScreenAdapter {
 
@@ -29,7 +36,7 @@ public class LoginScreen extends ScreenAdapter {
 
     @Override
     public void show() {
-        // Setup Stage (Panggung UI)
+        // Setup Stage
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage); // Agar tombol bisa diklik
 
@@ -39,9 +46,9 @@ public class LoginScreen extends ScreenAdapter {
         // Layout menggunakan Table (Seperti HTML Table)
         Table table = new Table();
         table.setFillParent(true); // Memenuhi layar
-        // table.setDebug(true); // Hapus komentar ini jika ingin melihat garis layout
+        // table.setDebug(true); // untuk melihat outline
 
-        // Buat Widget
+        // Buat Widget Text
         Label titleLabel = new Label("EINSTEIN DASH", skin);
         titleLabel.setFontScale(2);
 
@@ -58,6 +65,33 @@ public class LoginScreen extends ScreenAdapter {
         TextButton registerButton = new TextButton("No account? Register here", skin);
         registerButton.getLabel().setFontScale(0.8f);
 
+        // Enter di field username akan langsung ke field password
+        usernameField.addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == com.badlogic.gdx.Input.Keys.ENTER) {
+                    stage.setKeyboardFocus(passwordField);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // Enter di field password akan langsung ke verifikasi login
+        passwordField.addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == com.badlogic.gdx.Input.Keys.ENTER) {
+                    handleLogin();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // Agar kursor langsung di username saat awal
+        stage.setKeyboardFocus(usernameField);
+
         // Masukkan ke Table
         table.add(titleLabel).padBottom(20).row();
         table.add(usernameField).width(200).padBottom(10).row();
@@ -65,8 +99,6 @@ public class LoginScreen extends ScreenAdapter {
         table.add(loginButton).width(100).padBottom(10).row();
         table.add(registerButton).padBottom(10).row();
         table.add(statusLabel).row();
-
-
         stage.addActor(table);
 
         // Logika Tombol Login
