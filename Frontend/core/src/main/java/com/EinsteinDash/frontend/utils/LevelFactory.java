@@ -9,6 +9,9 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Pool;
 import com.EinsteinDash.frontend.objects.Block;
 import com.EinsteinDash.frontend.objects.Spike;
+import com.EinsteinDash.frontend.objects.Goal;
+import com.EinsteinDash.frontend.objects.Coin;
+import java.util.Iterator;
 
 public class LevelFactory {
 
@@ -31,9 +34,21 @@ public class LevelFactory {
         }
     };
 
+    private final Pool<Goal> goalPool = new Pool<Goal>() {
+        @Override
+        protected Goal newObject() { return new Goal(); }
+    };
+
+    private final Pool<Coin> coinPool = new Pool<Coin>() {
+        @Override
+        protected Coin newObject() { return new Coin(); }
+    };
+
     // Daftar Object Aktif
     private final Array<Block> activeBlocks = new Array<>();
     private final Array<Spike> activeSpikes = new Array<>();
+    private final Array<Goal> activeGoals = new Array<>();
+    private final Array<Coin> activeCoins = new Array<>();
 
     public LevelFactory(World world) {
         this.world = world;
@@ -69,6 +84,18 @@ public class LevelFactory {
                 spike.init(world, x, y);
                 activeSpikes.add(spike);
             }
+            // Mendeteksi dan generate Goal
+            else if (type.equals("GOAL")) {
+                Goal goal = goalPool.obtain();
+                goal.init(world, x, y);
+                activeGoals.add(goal);
+            }
+            // Mendeteksi dan generate Coin
+            else if (type.equals("COIN")) {
+                Coin coin = coinPool.obtain();
+                coin.init(world, x, y);
+                activeCoins.add(coin);
+            }
         }
     }
 
@@ -81,20 +108,51 @@ public class LevelFactory {
         for (Block block : activeBlocks) {
             block.draw(batch);
         }
-
         // Gambar Spike
         for (Spike spike : activeSpikes) {
             spike.draw(batch);
+        }
+        // Gambar Goal
+        for (Goal goal : activeGoals) {
+            goal.draw(batch);
+        }
+        // Gambar Coin
+        for (Coin coin : activeCoins) {
+            coin.draw(batch);
+        }
+    }
+
+    public void removeCollectedCoins() {
+        // Gunakan Iterator untuk loop aman sambil menghapus
+        Iterator<Coin> iter = activeCoins.iterator();
+
+        while (iter.hasNext()) {
+            Coin coin = iter.next();
+
+            // Jika koin sudah diambil (collect() sudah dipanggil di listener)
+            if (coin.isCollected()) {
+                // Kembalikan ke Pool
+                coinPool.free(coin);
+                // Hapus dari daftar aktif agar tidak dirender lagi
+                iter.remove();
+            }
         }
     }
 
     // Mengembalikan semua objek ke pool
     public void freeAll() {
+        // Free Spike
         spikePool.freeAll(activeSpikes);
         activeSpikes.clear();
-
+        // Free Block
         blockPool.freeAll(activeBlocks);
         activeBlocks.clear();
+        // Free Goal
+        goalPool.freeAll(activeGoals);
+        activeGoals.clear();
+        // Free Coin
+        coinPool.freeAll(activeCoins);
+        activeCoins.clear();
     }
 
     private void createFloor() {

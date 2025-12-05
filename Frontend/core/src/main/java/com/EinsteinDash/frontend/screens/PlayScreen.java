@@ -123,6 +123,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
         // 2. Step World (Simulasi Fisika 60fps)
         world.step(1/60f, 6, 2);
+        levelFactory.removeCollectedCoins();    // Menghapus koin
 
         // 3. Update Player
         player.update(dt);
