@@ -30,7 +30,7 @@ public class RegisterScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        skin = game.assets.get("uiskin.json", Skin.class);
 
         Table table = new Table();
         table.setFillParent(true);
@@ -126,6 +126,5 @@ public class RegisterScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
-        skin.dispose();
     }
 }

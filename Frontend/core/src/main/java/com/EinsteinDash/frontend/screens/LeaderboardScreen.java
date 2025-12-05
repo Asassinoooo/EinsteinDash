@@ -31,7 +31,7 @@ public class LeaderboardScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        skin = game.assets.get("uiskin.json", Skin.class);
 
         // Layout Utama
         Table rootTable = new Table();
@@ -158,6 +158,5 @@ public class LeaderboardScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
-        skin.dispose();
     }
 }

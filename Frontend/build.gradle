@@ -72,16 +72,28 @@ subprojects {
 
 eclipse.project.name = 'EinsteinDash' + '-parent'
 
+project(":lwjgl3") {
+  apply plugin: "java-library"
+
+  dependencies {
+    implementation project(":core")
+    api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+
+    // Freetype Natives
+    api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+
+    // Box2D Natives (PENTING AGAR TIDAK ERROR DLL)
+    api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+  }
+}
+
 project(":core") {
   apply plugin: "java-library"
 
   dependencies {
     api "com.badlogicgames.gdx:gdx:$gdxVersion"
-
-    // --- TAMBAHAN UNTUK FREETYPE (CORE) ---
     api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-
-    // --- TAMBAHAN UNTUK BOX2D (CORE) ---
     api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
   }
 }

@@ -2,9 +2,11 @@ package com.EinsteinDash.frontend;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.SkinLoader;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.screens.LoginScreen;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 // Design Pattern: Singleton (Secara konsep, class Game ini hanya ada 1 instance)
 public class Main extends Game {
@@ -23,13 +25,16 @@ public class Main extends Game {
         assets = new AssetManager();
         backend = new BackendFacade();
 
+        assets.load("uiskin.json", Skin.class, new SkinLoader.SkinParameter("uiskin.atlas"));
+        assets.finishLoading();
+
         // Set layar awal ke LoginScreen
         this.setScreen(new LoginScreen(this));
     }
 
     @Override
     public void render() {
-        super.render(); // Penting! Ini akan memanggil method render() di Screen aktif
+        super.render();
     }
 
     @Override
