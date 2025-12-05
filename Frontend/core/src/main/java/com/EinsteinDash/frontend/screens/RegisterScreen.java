@@ -12,98 +12,99 @@ import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.utils.Constants;
 
-public class LoginScreen extends ScreenAdapter {
+public class RegisterScreen extends ScreenAdapter {
 
     private final Main game;
     private Stage stage;
-    private Skin skin; // Aset tampilan UI
+    private Skin skin;
 
-    // Komponen UI
     private TextField usernameField;
     private TextField passwordField;
     private Label statusLabel;
 
-    public LoginScreen(Main game) {
+    public RegisterScreen(Main game) {
         this.game = game;
     }
 
     @Override
     public void show() {
-        // Setup Stage (Panggung UI)
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
-        Gdx.input.setInputProcessor(stage); // Agar tombol bisa diklik
-
-        // Load Skin (Pastikan file uiskin ada di folder assets)
+        Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-        // Layout menggunakan Table (Seperti HTML Table)
         Table table = new Table();
-        table.setFillParent(true); // Memenuhi layar
-        // table.setDebug(true); // Hapus komentar ini jika ingin melihat garis layout
+        table.setFillParent(true);
 
-        // Buat Widget
-        Label titleLabel = new Label("EINSTEIN DASH", skin);
+        Label titleLabel = new Label("CREATE ACCOUNT", skin);
         titleLabel.setFontScale(2);
 
         usernameField = new TextField("", skin);
-        usernameField.setMessageText("Username");
+        usernameField.setMessageText("New Username");
 
         passwordField = new TextField("", skin);
-        passwordField.setMessageText("Password");
+        passwordField.setMessageText("New Password");
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
 
-        TextButton loginButton = new TextButton("LOGIN", skin);
+        TextButton registerButton = new TextButton("REGISTER", skin);
+        TextButton backButton = new TextButton("BACK TO LOGIN", skin);
         statusLabel = new Label("", skin);
-        TextButton registerButton = new TextButton("No account? Register here", skin);
-        registerButton.getLabel().setFontScale(0.8f);
+        statusLabel.setColor(1, 0, 0, 1); // Warna merah untuk error
 
-        // Masukkan ke Table
-        table.add(titleLabel).padBottom(20).row();
+        // Layout
+        table.add(titleLabel).padBottom(30).row();
         table.add(usernameField).width(200).padBottom(10).row();
         table.add(passwordField).width(200).padBottom(20).row();
-        table.add(loginButton).width(100).padBottom(10).row();
-        table.add(registerButton).padBottom(10).row();
+        table.add(registerButton).width(150).padBottom(10).row();
+        table.add(backButton).width(150).padBottom(10).row();
         table.add(statusLabel).row();
-
 
         stage.addActor(table);
 
-        // Logika Tombol Login
-        loginButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                handleLogin();
-            }
-        });
-
-        // Logika Tombol Register
+        // Logic Tombol Register
         registerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new RegisterScreen(game));
+                handleRegister();
+            }
+        });
+
+        // Logic Tombol Back
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new LoginScreen(game));
             }
         });
     }
 
-    private void handleLogin() {
+    private void handleRegister() {
         String user = usernameField.getText();
         String pass = passwordField.getText();
 
-        statusLabel.setText("Connecting...");
+        if (user.isEmpty() || pass.isEmpty()) {
+            statusLabel.setText("Username/Pass cannot be empty!");
+            return;
+        }
 
-        // Panggil Facade
-        game.backend.login(user, pass, new BackendFacade.LoginCallback() {
+        statusLabel.setText("Registering...");
+
+        // Panggil Facade Register
+        game.backend.register(user, pass, new BackendFacade.RegisterCallback() {
             @Override
             public void onSuccess() {
-                statusLabel.setText("Success!");
+                // Jika sukses, beri info dan kembali ke login
+                Gdx.app.log("REGISTER", "Akun dibuat!");
+                statusLabel.setColor(0, 1, 0, 1); // Hijau
+                statusLabel.setText("Success! Please Login.");
 
-                // Transisi ke Menu Screen
-                game.setScreen(new MenuScreen(game));
+                // Opsional: Otomatis pindah ke Login setelah 1 detik
+                // Tapi user manual klik Back juga tidak apa-apa
             }
 
             @Override
             public void onFailed(String errorMessage) {
+                statusLabel.setColor(1, 0, 0, 1); // Merah
                 statusLabel.setText(errorMessage);
             }
         });
@@ -111,11 +112,8 @@ public class LoginScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        // Bersihkan layar (Hitam)
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1); // Abu-abu gelap beda dikit dari login
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        // Gambar UI
         stage.act(delta);
         stage.draw();
     }

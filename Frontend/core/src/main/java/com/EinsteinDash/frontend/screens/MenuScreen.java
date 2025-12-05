@@ -1,4 +1,4 @@
-package com.einsteindash.frontend.screens;
+package com.EinsteinDash.frontend.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -8,9 +8,9 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.einsteindash.frontend.Main;
-import com.einsteindash.frontend.utils.Constants;
-import com.einsteindash.frontend.utils.Session;
+import com.EinsteinDash.frontend.Main;
+import com.EinsteinDash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.utils.Session;
 
 public class MenuScreen extends ScreenAdapter {
 
