@@ -14,6 +14,9 @@ import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.utils.*;
 import com.EinsteinDash.frontend.input.InputHandler;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.physics.box2d.Body;
 
 public class PlayScreen extends ScreenAdapter implements GameObserver {
 
@@ -42,10 +45,10 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         this.game = game;
         this.levelData = levelData;
 
-        // 1. Inisialisasi Box2D
+        // Inisialisasi Box2D
         Box2D.init();
 
-        // 2. Setup Camera (ZOOM IN 2.5x)
+        // Setup Camera
         gameCam = new OrthographicCamera();
         gamePort = new FitViewport(
             (Constants.V_WIDTH / Constants.PPM) / 2.5f,
@@ -53,22 +56,22 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
             gameCam
         );
 
-        // 3. Setup World Fisika
+        // Setup World Fisika
         world = new World(new Vector2(0, -10), true); // Gravitasi standar -10
         b2dr = new Box2DDebugRenderer();
 
-        // 4. Pasang Contact Listener (Observer Pattern untuk Deteksi Tabrakan)
+        // Pasang Contact Listener (Observer Pattern untuk deteksi tabrakan)
         WorldContactListener contactListener = new WorldContactListener();
         contactListener.addObserver(this); // Daftarkan layar ini agar tahu kalau player mati
         world.setContactListener(contactListener);
 
-        // 5. Generate Level dari JSON
+        // Generate Level dari JSON
         levelFactory = new LevelFactory(world);
         if (this.levelData != null && this.levelData.getLevelData() != null) {
             levelFactory.createLevel(this.levelData.getLevelData());
         }
 
-        // 6. Spawn Player & Input
+        // Spawn Player & Input
         player = new Player(world);
         inputHandler = new InputHandler();
 
@@ -86,12 +89,22 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     public void render(float delta) {
         update(delta);
 
-        // Clear Screen (Warna Latar Belakang)
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1); // Sedikit biru gelap
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Render Garis Hijau Fisika (Debug View)
-        b2dr.render(world, gameCam.combined);
+        // Render Gambar
+        game.batch.setProjectionMatrix(gameCam.combined);
+        game.batch.begin();
+
+        // Gambar Player
+        player.draw(game.batch);
+
+        // Gambar Level
+        levelFactory.draw(game.batch);
+
+        game.batch.end();
+
+        // b2dr.render(world, gameCam.combined);   // debug (outline hijau)
     }
 
     private void update(float dt) {
@@ -110,6 +123,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
         // 2. Step World (Simulasi Fisika 60fps)
         world.step(1/60f, 6, 2);
+        levelFactory.removeCollectedCoins();    // Menghapus koin
 
         // 3. Update Player
         player.update(dt);

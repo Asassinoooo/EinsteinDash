@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend.utils;
 
+import com.EinsteinDash.frontend.objects.Coin;
 import com.badlogic.gdx.physics.box2d.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,15 @@ public class WorldContactListener implements ContactListener {
                     }
                 }
                 else if (type.equals("GOAL")) {
+                    System.out.println("WINNER!");
                     notifyLevelCompleted();
+                }
+                else if (type.equals("COIN")) {
+                    Object data = otherFix.getBody().getUserData();
+                    if (data instanceof Coin) {
+                        ((Coin) data).collect();
+                        System.out.println("COIN COLLECTED! +1 Score");
+                    }
                 }
             }
         }

@@ -1,91 +1,158 @@
 package com.EinsteinDash.frontend.utils;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Pool;
+import com.EinsteinDash.frontend.objects.Block;
+import com.EinsteinDash.frontend.objects.Spike;
+import com.EinsteinDash.frontend.objects.Goal;
+import com.EinsteinDash.frontend.objects.Coin;
+import java.util.Iterator;
 
 public class LevelFactory {
 
     private World world;
+    private Texture floorTexture;
+
+    // Buat pool Block
+    private final Pool<Block> blockPool = new Pool<Block>() {
+        @Override
+        protected Block newObject() {
+            return new Block(); // Buat baru jika habis
+        }
+    };
+
+    // Buat pool Block
+    private final Pool<Spike> spikePool = new Pool<Spike>() {
+        @Override
+        protected Spike newObject() {
+            return new Spike(); // Buat baru jika habis
+        }
+    };
+
+    private final Pool<Goal> goalPool = new Pool<Goal>() {
+        @Override
+        protected Goal newObject() { return new Goal(); }
+    };
+
+    private final Pool<Coin> coinPool = new Pool<Coin>() {
+        @Override
+        protected Coin newObject() { return new Coin(); }
+    };
+
+    // Daftar Object Aktif
+    private final Array<Block> activeBlocks = new Array<>();
+    private final Array<Spike> activeSpikes = new Array<>();
+    private final Array<Goal> activeGoals = new Array<>();
+    private final Array<Coin> activeCoins = new Array<>();
 
     public LevelFactory(World world) {
         this.world = world;
+        this.floorTexture = new Texture("floor.png");
     }
 
-    // Design Pattern: Factory Method
-    // Menerima string JSON, menghasilkan objek-objek di dunia Box2D
     public void createLevel(String jsonLevelData) {
+        // Bersihkan level lama (kembalikan ke pool)
+        freeAll();
+
+        // Buat Lantai
+        createFloor();
+
         if (jsonLevelData == null || jsonLevelData.isEmpty()) return;
 
         JsonValue root = new JsonReader().parse(jsonLevelData);
 
+        // Membaca JSON level
         for (JsonValue object : root) {
             String type = object.getString("type");
             float x = object.getFloat("x");
             float y = object.getFloat("y");
 
-            switch (type) {
-                case "BLOCK":
-                    createBlock(x, y);
-                    break;
-                case "SPIKE":
-                    createSpike(x, y);
-                    break;
-                case "GOAL":
-                    createGoal(x, y);
-                    break;
-                default:
-                    System.out.println("Unknown object: " + type);
+            // Mendeteksi dan generate Block
+            if (type.equals("BLOCK")) {
+                Block block = blockPool.obtain();
+                block.init(world, x, y);
+                activeBlocks.add(block);
+            }
+            // Mendeteksi dan generate Block
+            else if (type.equals("SPIKE")) {
+                Spike spike = spikePool.obtain();
+                spike.init(world, x, y);
+                activeSpikes.add(spike);
+            }
+            // Mendeteksi dan generate Goal
+            else if (type.equals("GOAL")) {
+                Goal goal = goalPool.obtain();
+                goal.init(world, x, y);
+                activeGoals.add(goal);
+            }
+            // Mendeteksi dan generate Coin
+            else if (type.equals("COIN")) {
+                Coin coin = coinPool.obtain();
+                coin.init(world, x, y);
+                activeCoins.add(coin);
             }
         }
-
-        // Selalu buat lantai (Floor) panjang tak terbatas
-        createFloor();
     }
 
-    private void createBlock(float x, float y) {
-        BodyDef bdef = new BodyDef();
-        bdef.position.set((x * 32 + 16) / Constants.PPM, (y * 32 + 16) / Constants.PPM); // Asumsi 1 grid = 32px
-        bdef.type = BodyDef.BodyType.StaticBody;
-        Body body = world.createBody(bdef);
+    // Hanya menggambar objek yang ada di daftar aktif
+    public void draw(SpriteBatch batch) {
+        // Gambar Lantai
+        batch.draw(floorTexture, -50, -1 / Constants.PPM, 1000, 1 / Constants.PPM);
 
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox(16 / Constants.PPM, 16 / Constants.PPM); // Setengah lebar/tinggi
-
-        FixtureDef fdef = new FixtureDef();
-        fdef.shape = shape;
-        fdef.friction = 0; // Agar player tidak nempel dinding
-        body.createFixture(fdef).setUserData("BLOCK");
-
-        shape.dispose();
+        // Gambar Block
+        for (Block block : activeBlocks) {
+            block.draw(batch);
+        }
+        // Gambar Spike
+        for (Spike spike : activeSpikes) {
+            spike.draw(batch);
+        }
+        // Gambar Goal
+        for (Goal goal : activeGoals) {
+            goal.draw(batch);
+        }
+        // Gambar Coin
+        for (Coin coin : activeCoins) {
+            coin.draw(batch);
+        }
     }
 
-    private void createSpike(float x, float y) {
-        BodyDef bdef = new BodyDef();
-        bdef.position.set((x * 32 + 16) / Constants.PPM, (y * 32 + 16) / Constants.PPM);
-        bdef.type = BodyDef.BodyType.StaticBody;
-        Body body = world.createBody(bdef);
+    public void removeCollectedCoins() {
+        // Gunakan Iterator untuk loop aman sambil menghapus
+        Iterator<Coin> iter = activeCoins.iterator();
 
-        // Bentuk Segitiga
-        PolygonShape shape = new PolygonShape();
-        Vector2[] vertices = new Vector2[3];
-        vertices[0] = new Vector2(-16 / Constants.PPM, -16 / Constants.PPM); // Kiri Bawah
-        vertices[1] = new Vector2(16 / Constants.PPM, -16 / Constants.PPM);  // Kanan Bawah
-        vertices[2] = new Vector2(0, 16 / Constants.PPM);                    // Atas Tengah
-        shape.set(vertices);
+        while (iter.hasNext()) {
+            Coin coin = iter.next();
 
-        FixtureDef fdef = new FixtureDef();
-        fdef.shape = shape;
-        fdef.isSensor = true; // Sensor = Bisa ditembus (untuk deteksi tabrakan saja)
-        body.createFixture(fdef).setUserData("SPIKE"); // Tag untuk deteksi kematian
-
-        shape.dispose();
+            // Jika koin sudah diambil (collect() sudah dipanggil di listener)
+            if (coin.isCollected()) {
+                // Kembalikan ke Pool
+                coinPool.free(coin);
+                // Hapus dari daftar aktif agar tidak dirender lagi
+                iter.remove();
+            }
+        }
     }
 
-    private void createGoal(float x, float y) {
-        // Mirip block tapi sensor, buat nanti saja
+    // Mengembalikan semua objek ke pool
+    public void freeAll() {
+        // Free Spike
+        spikePool.freeAll(activeSpikes);
+        activeSpikes.clear();
+        // Free Block
+        blockPool.freeAll(activeBlocks);
+        activeBlocks.clear();
+        // Free Goal
+        goalPool.freeAll(activeGoals);
+        activeGoals.clear();
+        // Free Coin
+        coinPool.freeAll(activeCoins);
+        activeCoins.clear();
     }
 
     private void createFloor() {
@@ -95,13 +162,14 @@ public class LevelFactory {
         Body body = world.createBody(bdef);
 
         EdgeShape shape = new EdgeShape();
-        // Lantai sepanjang 1000 meter
-        shape.set(0, 0, 1000, 0);
+        shape.set(-50, 0, 1000, 0);
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
         fdef.friction = 0;
+
         body.createFixture(fdef).setUserData("FLOOR");
+        body.setUserData("FLOOR");
 
         shape.dispose();
     }
