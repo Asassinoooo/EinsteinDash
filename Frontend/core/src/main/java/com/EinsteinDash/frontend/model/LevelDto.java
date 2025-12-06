@@ -6,6 +6,8 @@ public class LevelDto {
     private String levelData; // JSON string layout level
     private int stars;
     private int audioTrackId;
+    private boolean iscompleted;
+    private int coinsCollected;
 
     public LevelDto() {}
 
@@ -15,6 +17,10 @@ public class LevelDto {
     public String getLevelData() { return levelData; }
     public int getStars() { return stars; }
     public int getAudioTrackId() { return audioTrackId; }
+    public boolean isCompleted() { return iscompleted; }
+    public void setCompleted(boolean completed) { this.iscompleted = completed; }
+    public int getCoinsCollected() { return coinsCollected; }
+    public void setCoinsCollected(int coinsCollected) { this.coinsCollected = coinsCollected; }
 
     // toString untuk debugging
     @Override

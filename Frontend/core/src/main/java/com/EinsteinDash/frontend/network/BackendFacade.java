@@ -10,6 +10,7 @@ import com.EinsteinDash.frontend.utils.Session;
 import java.util.ArrayList;
 import com.badlogic.gdx.utils.Json;
 import com.EinsteinDash.frontend.model.LevelDto;
+import com.badlogic.gdx.utils.JsonWriter;
 
 public class BackendFacade {
 
@@ -33,6 +34,11 @@ public class BackendFacade {
     public interface LevelListCallback {
         void onSuccess(ArrayList<LevelDto> levels);
         void onFailed(String errorMessage);
+    }
+
+    public interface SyncCallback {
+        void onSuccess();
+        void onFailed(String error);
     }
 
     public void login(String username, String password, final LoginCallback callback) {
@@ -192,5 +198,65 @@ public class BackendFacade {
             @Override
             public void cancelled() { }
         });
+    }
+
+    @SuppressWarnings("unchecked")  // biar bersih ajah
+    public void syncProgress(int userId, int levelId, int percentage, int attemptsToAdd, int coinsCollected, final SyncCallback callback) {
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+
+        // Setup Object Json
+        Json json = new Json();
+        json.setOutputType(JsonWriter.OutputType.json);
+
+        // Buat Data & Konversi ke String
+        SyncData data = new SyncData(userId, levelId, percentage, attemptsToAdd, coinsCollected);
+        String content = json.toJson(data);
+
+        Net.HttpRequest httpRequest = requestBuilder.newRequest()
+            .method(Net.HttpMethods.POST)
+            .url(Constants.BASE_URL + "/sync")
+            .header("Content-Type", "application/json")
+            .content(content)
+            .build();
+
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                if (httpResponse.getStatus().getStatusCode() == 200) {
+                    Gdx.app.log("BACKEND", "Progress Synced!");
+                    // simpan ke memory local
+                    Session.getInstance().saveLocalProgress(levelId, coinsCollected);
+                    Gdx.app.postRunnable(() -> callback.onSuccess());
+                } else {
+                    Gdx.app.error("BACKEND", "Sync Failed: " + httpResponse.getStatus().getStatusCode());
+                    Gdx.app.postRunnable(() -> callback.onFailed("Sync Error"));
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailed(t.getMessage()));
+            }
+
+            @Override
+            public void cancelled() { }
+        });
+    }
+
+    // Helper Class
+    private static class SyncData {
+        public int userId;
+        public int levelId;
+        public int percentage;
+        public int attemptsToAdd;
+        public int coinsCollected;
+
+        public SyncData(int userId, int levelId, int percentage, int attemptsToAdd, int coinsCollected) {
+            this.userId = userId;
+            this.levelId = levelId;
+            this.percentage = percentage;
+            this.attemptsToAdd = attemptsToAdd;
+            this.coinsCollected = coinsCollected;
+        }
     }
 }
