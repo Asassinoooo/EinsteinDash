@@ -68,6 +68,8 @@ public class GameService {
         if (progress.getId() == null) {
             progress.setUser(user);
             progress.setLevel(level);
+            progress.setCoinsCollected(0);
+            progress.setPercentage(0);
         }
 
         // Update total attempts (akumulasi)
@@ -87,6 +89,20 @@ public class GameService {
             // Tambahkan bintang ke user sesuai difficulty level
             user.setTotalStars(user.getTotalStars() + level.getStars());
             userRepository.save(user); // Simpan update user
+        }
+
+        // Logika Coin
+        int oldCoins = progress.getCoinsCollected();
+        int newCoins = request.getCoinsCollected();
+        if (newCoins > oldCoins) {
+            // Update progress level
+            progress.setCoinsCollected(newCoins);
+            // Hitung selisih
+            int coinsDiff = newCoins - oldCoins;
+            int currentTotal = user.getTotalCoins();
+            user.setTotalCoins(currentTotal + coinsDiff);
+            // Simpan perubahan user ke database
+            userRepository.save(user);
         }
 
         return progressRepository.save(progress);

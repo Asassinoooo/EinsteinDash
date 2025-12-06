@@ -24,4 +24,5 @@ public class LevelProgress {
     private int percentage; // Best percentage (0-100)
     private int attempts;
     private boolean isCompleted;
+    private int coinsCollected = 0;
 }

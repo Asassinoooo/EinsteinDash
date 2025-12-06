@@ -7,4 +7,5 @@ public class ProgressRequest {
     private Long levelId;
     private int percentage;
     private int attemptsToAdd; // Jumlah attempt baru sesi ini
+    private int coinsCollected;
 }
