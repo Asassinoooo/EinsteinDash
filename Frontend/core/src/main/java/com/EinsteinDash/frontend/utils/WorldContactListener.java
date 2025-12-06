@@ -65,6 +65,9 @@ public class WorldContactListener implements ContactListener {
                     if (data instanceof Coin) {
                         ((Coin) data).collect();
                         System.out.println("COIN COLLECTED! +1 Score");
+                        for(GameObserver o : observers) {
+                            o.onCoinCollected();
+                        }
                     }
                 }
             }

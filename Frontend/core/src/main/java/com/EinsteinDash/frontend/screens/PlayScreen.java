@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend.screens;
 
+import com.EinsteinDash.frontend.scenes.Hud;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
@@ -41,6 +42,8 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     // Game State
     private boolean isDead = false;
 
+    private Hud hud;
+
     public PlayScreen(Main game, LevelDto levelData) {
         this.game = game;
         this.levelData = levelData;
@@ -77,6 +80,8 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
         // Set posisi kamera awal agar pas saat spawn
         updateCameraPosition();
+
+        hud = new Hud(game.batch);
     }
 
     @Override
@@ -103,6 +108,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         levelFactory.draw(game.batch);
 
         game.batch.end();
+
+        game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
+        hud.stage.draw();
 
         // b2dr.render(world, gameCam.combined);   // debug (outline hijau)
     }
@@ -169,6 +177,14 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     @Override
     public void resize(int width, int height) {
         gamePort.update(width, height);
+        hud.stage.getViewport().update(width, height);
+    }
+
+    @Override
+    public void onCoinCollected() {
+        // Tambah skor di HUD
+        hud.addScore(1);
+        System.out.println("Coin UI Updated!");
     }
 
     @Override
@@ -176,5 +192,6 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         world.dispose();
         b2dr.dispose();
         player.dispose();
+        hud.dispose();
     }
 }
