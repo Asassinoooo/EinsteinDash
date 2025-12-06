@@ -1,5 +1,8 @@
 package com.EinsteinDash.frontend.objects;
 
+import com.EinsteinDash.frontend.utils.GamePalette;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.*;
@@ -11,14 +14,22 @@ public class Goal implements Pool.Poolable {
     private World world;
     private Texture texture;
     private boolean active;
-    private static Texture GOAL_TEXTURE;
+
+    // Texture statis (dibuat sekali saja)
+    private static Texture LINE_TEXTURE;
 
     public Goal() {
         this.active = false;
-        if (GOAL_TEXTURE == null) {
-            GOAL_TEXTURE = new Texture("portal.png");
+
+        // Texture line berwarna kuning
+        if (LINE_TEXTURE == null) {
+            Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+            pixmap.setColor(Color.WHITE);
+            pixmap.fill();
+            LINE_TEXTURE = new Texture(pixmap);
+            pixmap.dispose(); // Hapus pixmap dari memori setelah jadi Texture
         }
-        this.texture = GOAL_TEXTURE;
+        this.texture = LINE_TEXTURE;
     }
 
     public void init(World world, float x, float y) {
@@ -29,19 +40,21 @@ public class Goal implements Pool.Poolable {
 
     private void defineBody(float x, float y) {
         BodyDef bdef = new BodyDef();
-        bdef.position.set((x * 32 + 16) / Constants.PPM, (y * 32 + 16) / Constants.PPM);
+        // Posisi X sesuai JSON, tapi Y taruh di tengah layar
+        bdef.position.set((x * 32 + 16) / Constants.PPM, (Constants.V_HEIGHT / 2f) / Constants.PPM);
         bdef.type = BodyDef.BodyType.StaticBody;
         body = world.createBody(bdef);
 
+        // Bentuk Kotak Sangat Tinggi & Tipis
         PolygonShape shape = new PolygonShape();
-        // Ukuran
-        shape.setAsBox(20 / Constants.PPM, 40 / Constants.PPM);
+
+        // Ukuran collider 4x30
+        shape.setAsBox(2 / Constants.PPM, 15);
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
-        fdef.isSensor = true;
+        fdef.isSensor = true; // Tembus
 
-        // Labeling
         body.createFixture(fdef).setUserData("GOAL");
         body.setUserData("GOAL");
 
@@ -51,14 +64,22 @@ public class Goal implements Pool.Poolable {
     public void draw(SpriteBatch batch) {
         if (!active) return;
 
-        // Visual agak besar
-        float width = 64 / Constants.PPM;
-        float height = 128 / Constants.PPM;
+        // Lebar 5px
+        float width = 5 / Constants.PPM;
+        // Tinggi setinggi layar
+        float height = Constants.V_HEIGHT / Constants.PPM * 2; // Kali 2 biar aman
 
+        // Warna
+        batch.setColor(GamePalette.Neon.YELLOW);      // Set warna kuning
+
+        // Gambar Garis
         batch.draw(texture,
             body.getPosition().x - width/2,
             body.getPosition().y - height/2,
             width, height);
+
+        // Kembalikan warna default
+        batch.setColor(Color.WHITE);
     }
 
     @Override

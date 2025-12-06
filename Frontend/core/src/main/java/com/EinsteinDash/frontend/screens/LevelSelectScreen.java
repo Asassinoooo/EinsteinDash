@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend.screens;
 
+import com.EinsteinDash.frontend.utils.Session;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
@@ -81,6 +82,15 @@ public class LevelSelectScreen extends ScreenAdapter {
                 // DISINI VARIABEL 'level' DIDEFINISIKAN (DALAM LOOP)
                 // ========================================================
                 for (LevelDto level : levels) {
+                    Gdx.app.log("DEBUG", "Level " + level.getId() + " Completed: " + level.isCompleted());
+
+                    // Cek sudah level completed atau belum
+                    Session session = Session.getInstance();
+                    if (session.isLevelCompleted(level.getId())) {
+                        level.setCompleted(true);
+                        level.setCoinsCollected(session.getLevelBestCoins(level.getId()));
+                        Gdx.app.log("DEBUG", "Level " + level.getId() + " restored from Session memory.");
+                    }
 
                     String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
                     TextButton levelBtn = new TextButton(btnText, skin);

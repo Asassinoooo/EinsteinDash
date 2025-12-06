@@ -17,6 +17,7 @@ public class LevelFactory {
 
     private World world;
     private Texture floorTexture;
+    private float levelEndPosition = 100f;
 
     // Buat pool Block
     private final Pool<Block> blockPool = new Pool<Block>() {
@@ -52,7 +53,10 @@ public class LevelFactory {
 
     public LevelFactory(World world) {
         this.world = world;
+        // load asset
         this.floorTexture = new Texture("floor.png");
+        // looping
+        this.floorTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
     }
 
     public void createLevel(String jsonLevelData) {
@@ -86,6 +90,8 @@ public class LevelFactory {
             }
             // Mendeteksi dan generate Goal
             else if (type.equals("GOAL")) {
+                // Simpan posisi X sebagai akhir level
+                this.levelEndPosition = (x * 32) / Constants.PPM;
                 Goal goal = goalPool.obtain();
                 goal.init(world, x, y);
                 activeGoals.add(goal);
@@ -102,7 +108,17 @@ public class LevelFactory {
     // Hanya menggambar objek yang ada di daftar aktif
     public void draw(SpriteBatch batch) {
         // Gambar Lantai
-        batch.draw(floorTexture, -50, -1 / Constants.PPM, 1000, 1 / Constants.PPM);
+        float totalWidthMeters = 1000f; // Panjang floor game
+        float startX = -50f;    // Posisi X dari -50 di kiri
+        float startY = -0.78f;   // Posisi Y diturunkan 0.8 sesuai ukuran asset
+        float height = 0.8f;    // Tinggi visual: 0.8 meter (sesuai gambar asli 80px)
+        int u2 = (int) ((totalWidthMeters * Constants.PPM) / 128);  // Hitung looping texture
+        batch.draw(floorTexture,
+            startX, startY,
+            totalWidthMeters, height,
+            0, 0,       // Source X, Y (Mulai dari pojok gambar)
+            u2, 1            // Repetisi (Ulang X sebanyak u2 kali, Y 1 kali)
+        );
 
         // Gambar Block
         for (Block block : activeBlocks) {
@@ -172,5 +188,9 @@ public class LevelFactory {
         body.setUserData("FLOOR");
 
         shape.dispose();
+    }
+
+    public float getLevelEndPosition() {
+        return levelEndPosition;
     }
 }

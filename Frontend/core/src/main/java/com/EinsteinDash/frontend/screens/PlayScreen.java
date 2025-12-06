@@ -1,6 +1,8 @@
 package com.EinsteinDash.frontend.screens;
 
+import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.scenes.Hud;
+import com.EinsteinDash.frontend.screens.LevelCompletedWindow;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
@@ -9,6 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.EinsteinDash.frontend.Main;
@@ -41,8 +44,10 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     // Game State
     private boolean isDead = false;
+    private boolean isLevelFinished = false;
 
     private Hud hud;
+    private int currentRunCoins = 0;    // tracker koin
 
     public PlayScreen(Main game, LevelDto levelData) {
         this.game = game;
@@ -82,6 +87,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         updateCameraPosition();
 
         hud = new Hud(game.batch);
+        currentRunCoins = 0;    // reset coin
     }
 
     @Override
@@ -109,6 +115,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
         game.batch.end();
 
+        // Update data HUD
+        hud.update(player.b2body.getPosition().x, levelFactory.getLevelEndPosition());
+
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
 
@@ -125,6 +134,8 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
             }
             return;
         }
+
+        if (isLevelFinished) return;    // jika game selesai, freeze
 
         // 1. Handle Input
         inputHandler.handleInput(player);
@@ -171,7 +182,55 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     @Override
     public void onLevelCompleted() {
+        if (isLevelFinished) return; // Cegah panggil 2x
+        isLevelFinished = true;
+
         Gdx.app.log("GAME", "LEVEL COMPLETE!");
+        // Hitung Bintang
+        // Jika level sebelumnya SUDAH tamat (isCompleted = true), bintang baru = 0.
+        // Jika BELUM, bintang baru = Bintang Level.
+        int starsEarned = 0;
+        if (!levelData.isCompleted()) {
+            starsEarned = levelData.getStars();
+        }
+
+        // Hitung Koin
+        // Koin Baru = Koin sesi ini dikurangi koin terbaik Sebelumnya.
+        int previousBestCoins = levelData.getCoinsCollected(); // Pastikan LevelDto punya getter ini
+        int coinsEarned = Math.max(0, currentRunCoins - previousBestCoins);
+
+        // Tampilkan Window
+        LevelCompletedWindow win = new LevelCompletedWindow(
+            game,
+            game.assets.get("uiskin.json", Skin.class),
+            levelData,
+            starsEarned,
+            coinsEarned,
+            currentRunCoins
+        );
+
+        // Kirim data ke backend (Sync)
+        int userId = Session.getInstance().getUserId();
+        game.backend.syncProgress(userId, levelData.getId(), 100, 1, currentRunCoins, new BackendFacade.SyncCallback() {
+            @Override
+            public void onSuccess() {
+                Gdx.app.log("SYNC", "Progress Saved Successfully!");
+                levelData.setCompleted(true);
+                if (currentRunCoins > levelData.getCoinsCollected()) {
+                    levelData.setCoinsCollected(currentRunCoins);
+                }
+                // Saat kembali ke menu, data tidak hilang
+                Session.getInstance().saveLocalProgress(levelData.getId(), levelData.getCoinsCollected());
+            }
+
+            @Override
+            public void onFailed(String error) {
+                Gdx.app.error("SYNC", "Failed to save progress: " + error);
+            }
+        });
+
+        hud.stage.addActor(win); // Pasang ke layar
+        Gdx.input.setInputProcessor(hud.stage); // Alihkan input ke HUD Stage
     }
 
     @Override
@@ -182,8 +241,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     @Override
     public void onCoinCollected() {
-        // Tambah skor di HUD
-        hud.addScore(1);
+        currentRunCoins++;
         System.out.println("Coin UI Updated!");
     }
 
