@@ -28,7 +28,7 @@ public class DataSeeder {
                         {"type": "SPIKE", "x": 42, "y": 0},
                         {"type": "SPIKE", "x": 47, "y": 0},
                         {"type": "GOAL",  "x": 50, "y": 0},
-                        {"type": "PORTAL_SHIP", "x": 40, "y": 2}.
+                        {"type": "PORTAL_SHIP", "x": 40, "y": 2},
                         {"type": "PORTAL_CUBE", "x": 1, "y": 0}
                     ]
                 """);
