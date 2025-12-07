@@ -185,52 +185,75 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         if (isLevelFinished) return; // Cegah panggil 2x
         isLevelFinished = true;
 
+
         Gdx.app.log("GAME", "LEVEL COMPLETE!");
-        // Hitung Bintang
-        // Jika level sebelumnya SUDAH tamat (isCompleted = true), bintang baru = 0.
-        // Jika BELUM, bintang baru = Bintang Level.
-        int starsEarned = 0;
-        if (!levelData.isCompleted()) {
-            starsEarned = levelData.getStars();
-        }
+        //data lama sebelum sync
+        boolean wasCompletedBefore = levelData.isCompleted();
+        int coinsBefore = levelData.getCoinsCollected();
 
-        // Hitung Koin
-        // Koin Baru = Koin sesi ini dikurangi koin terbaik Sebelumnya.
-        int previousBestCoins = levelData.getCoinsCollected(); // Pastikan LevelDto punya getter ini
-        int coinsEarned = Math.max(0, currentRunCoins - previousBestCoins);
+        int userId = Session.getInstance().getUserId();
 
-        // Tampilkan Window
-        LevelCompletedWindow win = new LevelCompletedWindow(
-            game,
-            game.assets.get("uiskin.json", Skin.class),
-            levelData,
-            starsEarned,
-            coinsEarned,
-            currentRunCoins
-        );
 
         // Kirim data ke backend (Sync)
-        int userId = Session.getInstance().getUserId();
         game.backend.syncProgress(userId, levelData.getId(), 100, 1, currentRunCoins, new BackendFacade.SyncCallback() {
+
             @Override
-            public void onSuccess() {
-                Gdx.app.log("SYNC", "Progress Saved Successfully!");
-                levelData.setCompleted(true);
-                if (currentRunCoins > levelData.getCoinsCollected()) {
-                    levelData.setCoinsCollected(currentRunCoins);
+            public void onSuccess(int serverCoins, boolean serverCompleted) {
+                // Method ini dipanggil SETELAH database selesai update
+
+                Gdx.app.log("SYNC", "Data Server -> Coins: " + serverCoins + ", Completed: " + serverCompleted);
+
+                // --- 3. HITUNG REWARD BERDASARKAN SELISIH DATA ---
+
+                // Hitung Bintang:
+                // Jika dulu BELUM completed, dan sekarang Server bilang COMPLETED -> Dapat Bintang
+                int starsEarned = 0;
+                if (!wasCompletedBefore && serverCompleted) {
+                    starsEarned = levelData.getStars();
                 }
-                // Saat kembali ke menu, data tidak hilang
-                Session.getInstance().saveLocalProgress(levelData.getId(), levelData.getCoinsCollected());
+
+                // Hitung Koin:
+                // Koin Baru = Total di Server - Total di Local (Dulu)
+                // Contoh: Server punya 3, Dulu punya 1. Berarti baru dapet 2.
+                int coinsEarned = Math.max(0, serverCoins - coinsBefore);
+
+                // --- 4. UPDATE DATA LOKAL UNTUK SESI BERIKUTNYA ---
+                levelData.setCompleted(serverCompleted);
+                levelData.setCoinsCollected(serverCoins);
+
+                // --- 5. TAMPILKAN WINDOW (Dengan data valid dari server) ---
+                LevelCompletedWindow win = new LevelCompletedWindow(
+                    game,
+                    game.assets.get("uiskin.json", Skin.class),
+                    levelData,
+                    starsEarned,
+                    coinsEarned,
+                    currentRunCoins
+                );
+
+                hud.stage.addActor(win);
+                Gdx.input.setInputProcessor(hud.stage);
             }
 
             @Override
             public void onFailed(String error) {
-                Gdx.app.error("SYNC", "Failed to save progress: " + error);
+                Gdx.app.error("SYNC", "Failed: " + error);
+
+                // Fallback: Jika internet mati, tampilkan window dengan hitungan lokal (agar game tidak macet)
+                //malazz -1 aja kalo gak ada internet
+                LevelCompletedWindow win = new LevelCompletedWindow(
+                    game,
+                    game.assets.get("uiskin.json", Skin.class),
+                    levelData,
+                    -1,
+                    -1,
+                    currentRunCoins
+                );
+
+                hud.stage.addActor(win); // Pasang ke layar
+                Gdx.input.setInputProcessor(hud.stage); // Alihkan input ke HUD Stage
             }
         });
-
-        hud.stage.addActor(win); // Pasang ke layar
-        Gdx.input.setInputProcessor(hud.stage); // Alihkan input ke HUD Stage
     }
 
     @Override

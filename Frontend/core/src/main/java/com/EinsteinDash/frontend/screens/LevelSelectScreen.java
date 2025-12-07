@@ -1,8 +1,10 @@
 package com.EinsteinDash.frontend.screens;
 
+import com.EinsteinDash.frontend.model.ProgressDto;
 import com.EinsteinDash.frontend.utils.Session;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -78,43 +80,81 @@ public class LevelSelectScreen extends ScreenAdapter {
                     return;
                 }
 
-                // ========================================================
-                // DISINI VARIABEL 'level' DIDEFINISIKAN (DALAM LOOP)
-                // ========================================================
-                for (LevelDto level : levels) {
-                    Gdx.app.log("DEBUG", "Level " + level.getId() + " Completed: " + level.isCompleted());
+                // --- LANGKAH BARU: AMBIL PROGRESS DARI DATABASE ---
+                int userId = Session.getInstance().getUserId();
 
-                    // Cek sudah level completed atau belum
-                    Session session = Session.getInstance();
-                    if (session.isLevelCompleted(level.getId())) {
-                        level.setCompleted(true);
-                        level.setCoinsCollected(session.getLevelBestCoins(level.getId()));
-                        Gdx.app.log("DEBUG", "Level " + level.getId() + " restored from Session memory.");
+                // Tampilkan loading sebentar selagi ambil progress
+                contentTable.add(new Label("Syncing progress...", skin));
+
+                game.backend.fetchUserProgress(userId, new BackendFacade.ProgressListCallback() {
+                    @Override
+                    public void onSuccess(ArrayList<ProgressDto> progressList) {
+                        contentTable.clear(); // Hapus tulisan loading
+
+                        // LOOP UTAMA: MERGE DATA LEVEL + PROGRESS
+                        for (LevelDto level : levels) {
+
+                            // Default: Belum tamat
+                            boolean isSynced = false;
+
+                            // Cari apakah ada data progress untuk level ini di database?
+                            for (ProgressDto prog : progressList) {
+                                if (prog.getLevelId() == level.getId()) {
+                                    // Timpa data level dengan data dari Database
+                                    level.setCompleted(prog.isCompleted());
+                                    level.setCoinsCollected(prog.getCoinsCollected());
+
+                                    // Kita update juga Session lokal biar tetap sinkron
+                                    Session.getInstance().saveLocalProgress(level.getId(), prog.getCoinsCollected());
+
+                                    Gdx.app.log("DB_SYNC", "Level " + level.getId() + " is COMPLETED in DB.");
+                                    isSynced = true;
+                                    break;
+                                }
+                            }
+
+
+                            // Opsional: Tambahkan teks "DONE" jika sudah tamat
+                            String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
+
+                            TextButton levelBtn = new TextButton(btnText,skin);
+                            levelBtn.getLabel().setFontScale(1.2f);
+
+                            if (level.isCompleted()) {
+                                levelBtn.setColor(Color.LIME);
+                            }
+
+                            // Listener tombol
+                            levelBtn.addListener(new ClickListener() {
+                                @Override
+                                public void clicked(InputEvent event, float x, float y) {
+                                    Gdx.app.log("LEVEL", "Selected: " + level.getLevelName());
+
+                                    // PENTING: Object 'level' yang dibawa ke PlayScreen ini
+                                    // SUDAH berisi data isCompleted=true dari database.
+                                    // Jadi logika "wasCompletedBefore" di PlayScreen akan valid.
+                                    game.setScreen(new PlayScreen(game, level));
+                                }
+                            });
+
+                            contentTable.add(levelBtn).width(600).height(70).pad(10).row();
+                        }
                     }
 
-                    String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
-                    TextButton levelBtn = new TextButton(btnText, skin);
-                    levelBtn.getLabel().setFontScale(1.2f);
-
-                    // Listener ini ada DI DALAM loop, jadi dia kenal variabel 'level'
-                    levelBtn.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            Gdx.app.log("LEVEL", "Selected: " + level.getLevelName());
-
-                            // Pindah ke PlayScreen dengan membawa objek 'level'
-                            game.setScreen(new PlayScreen(game, level));
-                        }
-                    });
-
-                    contentTable.add(levelBtn).width(600).height(70).pad(10).row();
-                }
+                    @Override
+                    public void onFailed(String error) {
+                        contentTable.clear();
+                        // Jika gagal ambil progress, tetap tampilkan level tapi progress kosong
+                        // Atau tampilkan error
+                        contentTable.add(new Label("Failed to sync progress: " + error, skin));
+                    }
+                });
             }
 
             @Override
             public void onFailed(String errorMessage) {
                 contentTable.clear();
-                Label errorLabel = new Label("Error: " + errorMessage, skin);
+                Label errorLabel = new Label("Error fetching levels: " + errorMessage, skin);
                 errorLabel.setColor(1, 0, 0, 1);
                 contentTable.add(errorLabel);
             }

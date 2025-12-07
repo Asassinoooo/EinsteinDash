@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend.network;
 
+import com.EinsteinDash.frontend.model.ProgressDto;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net;
 import com.badlogic.gdx.net.HttpRequestBuilder;
@@ -37,7 +38,12 @@ public class BackendFacade {
     }
 
     public interface SyncCallback {
-        void onSuccess();
+        void onSuccess(int serverCoins, boolean serverCompleted);
+        void onFailed(String error);
+    }
+
+    public interface ProgressListCallback {
+        void onSuccess(ArrayList<ProgressDto> progressList);
         void onFailed(String error);
     }
 
@@ -208,6 +214,7 @@ public class BackendFacade {
         Json json = new Json();
         json.setOutputType(JsonWriter.OutputType.json);
 
+
         // Buat Data & Konversi ke String
         SyncData data = new SyncData(userId, levelId, percentage, attemptsToAdd, coinsCollected);
         String content = json.toJson(data);
@@ -217,6 +224,7 @@ public class BackendFacade {
             .url(Constants.BASE_URL + "/sync")
             .header("Content-Type", "application/json")
             .content(content)
+            .timeout(30000)
             .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
@@ -224,12 +232,53 @@ public class BackendFacade {
             public void handleHttpResponse(Net.HttpResponse httpResponse) {
                 if (httpResponse.getStatus().getStatusCode() == 200) {
                     Gdx.app.log("BACKEND", "Progress Synced!");
+                    String responseString = httpResponse.getResultAsString();
+                    JsonValue root = new JsonReader().parse(responseString);
+                    int serverCoins = root.getInt("coinsCollected", 0);
+                    boolean serverCompleted = root.getBoolean("completed", false);
+
                     // simpan ke memory local
-                    Session.getInstance().saveLocalProgress(levelId, coinsCollected);
-                    Gdx.app.postRunnable(() -> callback.onSuccess());
+                    Session.getInstance().saveLocalProgress(levelId, serverCoins);
+                    Gdx.app.postRunnable(() -> callback.onSuccess(serverCoins, serverCompleted));
                 } else {
                     Gdx.app.error("BACKEND", "Sync Failed: " + httpResponse.getStatus().getStatusCode());
                     Gdx.app.postRunnable(() -> callback.onFailed("Sync Error"));
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailed(t.getMessage()));
+            }
+
+            @Override
+            public void cancelled() { }
+        });
+    }
+
+    public void fetchUserProgress(int userId, final ProgressListCallback callback) {
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+        Net.HttpRequest httpRequest = requestBuilder.newRequest()
+            .method(Net.HttpMethods.GET)
+            .url(Constants.BASE_URL + "/progress/" + userId)
+            .timeout(30000)
+            .build();
+
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                if (httpResponse.getStatus().getStatusCode() == 200) {
+                    String jsonString = httpResponse.getResultAsString();
+
+                    Json json = new Json();
+                    // Ignor unknown fields biar gak error kalau ada field aneh
+                    json.setIgnoreUnknownFields(true);
+
+                    ArrayList<ProgressDto> progressList = json.fromJson(ArrayList.class, ProgressDto.class, jsonString);
+
+                    Gdx.app.postRunnable(() -> callback.onSuccess(progressList));
+                } else {
+                    Gdx.app.postRunnable(() -> callback.onFailed("Error: " + httpResponse.getStatus().getStatusCode()));
                 }
             }
 
