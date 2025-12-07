@@ -32,6 +32,7 @@ public class GamePalette {
         public static final Color YELLOW    = Color.valueOf("#EAFF00"); // High-Vis Yellow
         public static final Color PURPLE    = Color.valueOf("#BC13FE"); // Laser Purple
         public static final Color BLUE      = Color.valueOf("#2979FF"); // Plasma Blue
+        public static final Color GREEN     = Color.valueOf("00FF00FF");
     }
 
     /* ==================================================================

@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend.utils;
 
+import com.EinsteinDash.frontend.objects.*;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.*;
@@ -7,10 +8,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Pool;
-import com.EinsteinDash.frontend.objects.Block;
-import com.EinsteinDash.frontend.objects.Spike;
-import com.EinsteinDash.frontend.objects.Goal;
-import com.EinsteinDash.frontend.objects.Coin;
+
 import java.util.Iterator;
 
 public class LevelFactory {
@@ -44,11 +42,17 @@ public class LevelFactory {
         protected Coin newObject() { return new Coin(); }
     };
 
+    private final Pool<Portal> portalPool = new Pool<Portal>() {
+        @Override
+        protected Portal newObject() { return new Portal(); }
+    };
+
     // Daftar Object Aktif
     private final Array<Block> activeBlocks = new Array<>();
     private final Array<Spike> activeSpikes = new Array<>();
     private final Array<Goal> activeGoals = new Array<>();
     private final Array<Coin> activeCoins = new Array<>();
+    private final Array<Portal> activePortals = new Array<>();
 
     public LevelFactory(World world) {
         this.world = world;
@@ -96,6 +100,13 @@ public class LevelFactory {
                 coin.init(world, x, y);
                 activeCoins.add(coin);
             }
+            // Kita terima tipe "PORTAL_SHIP" atau "PORTAL_CUBE"
+            else if (type.startsWith("PORTAL")) {
+                Portal portal = portalPool.obtain();
+                // Pass tipe-nya (misal "PORTAL_SHIP")
+                portal.init(world, x, y, type);
+                activePortals.add(portal);
+            }
         }
     }
 
@@ -119,6 +130,10 @@ public class LevelFactory {
         // Gambar Coin
         for (Coin coin : activeCoins) {
             coin.draw(batch);
+        }
+        // Gambar Portal
+        for (Portal portal : activePortals) {
+            portal.draw(batch);
         }
     }
 
@@ -153,6 +168,9 @@ public class LevelFactory {
         // Free Coin
         coinPool.freeAll(activeCoins);
         activeCoins.clear();
+        // Free Portal
+        portalPool.freeAll(activePortals);
+        activePortals.clear();
     }
 
     private void createFloor() {
