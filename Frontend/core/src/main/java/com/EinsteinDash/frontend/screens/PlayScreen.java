@@ -176,6 +176,23 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     public void onPlayerDied() {
         if (!isDead) {
             isDead = true;
+
+            int userId = Session.getInstance().getUserId();
+            int percentage = hud.getPercentage();
+            game.backend.syncProgress(userId, levelData.getId(), percentage, 1, 0, new BackendFacade.SyncCallback() {
+
+                @Override
+                public void onSuccess(int serverCoins, boolean serverCompleted) {
+                    Gdx.app.log("SYNC", "Success, attempt +1");
+
+                }
+
+                @Override
+                public void onFailed(String error) {
+                    Gdx.app.error("SYNC", "Failed: " + error);
+                }
+            });
+
             Gdx.app.log("GAME", "PLAYER MATI! Restarting level...");
         }
     }

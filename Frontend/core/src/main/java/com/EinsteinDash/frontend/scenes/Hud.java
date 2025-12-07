@@ -81,4 +81,8 @@ public class Hud {
     public void dispose() {
         stage.dispose();
     }
+
+    public int getPercentage() {
+        return (int)progressBar.getValue();
+    }
 }
