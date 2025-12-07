@@ -41,11 +41,11 @@ public class GameService {
     }
 
     // --- LEVEL MANAGEMENT ---
-
+    @Transactional(readOnly = true)
     public List<Level> getAllLevels() {
         return levelRepository.findAll();
     }
-
+    @Transactional(readOnly = true)
     public Level getLevelDetail(Long levelId) {
         return levelRepository.findById(levelId)
                 .orElseThrow(() -> new RuntimeException("Level not found"));

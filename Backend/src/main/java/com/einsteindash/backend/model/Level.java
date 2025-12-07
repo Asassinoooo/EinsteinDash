@@ -13,7 +13,7 @@ public class Level {
 
     private String levelName;
 
-    @Lob // Large Object untuk string layout yang panjang
+    @Column(columnDefinition = "TEXT") // Large Object untuk string layout yang panjang
     private String levelData;
 
     // Range 1-10 (Difficulty sekaligus reward bintang)

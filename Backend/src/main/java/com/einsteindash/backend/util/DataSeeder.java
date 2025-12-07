@@ -12,8 +12,8 @@ public class DataSeeder {
     @Bean
     CommandLineRunner initDatabase(LevelRepository repository) {
         return args -> {
-            if (repository.count() == 0) {
-                Level l1 = new Level();
+            if (true) {
+                Level l1 = repository.findByLevelName("Stereo Madness").orElse(new Level());
                 l1.setLevelName("Stereo Madness");
                 l1.setLevelData("""
                     [
@@ -36,7 +36,7 @@ public class DataSeeder {
                 l1.setAudioTrackId(101);
                 repository.save(l1);
 
-                Level l2 = new Level();
+                Level l2 = repository.findByLevelName("Back on Track").orElse(new Level());
                 l2.setLevelName("Back on Track");
                 l2.setLevelData("""
                     [
@@ -47,7 +47,6 @@ public class DataSeeder {
                         {"type": "SPIKE", "x": 20, "y": 0},
                         {"type": "SPIKE", "x": 40, "y": 0},
                         {"type": "SPIKE", "x": 41, "y": 0},
-                        {"type": "SPIKE", "x": 42, "y": 0},
                         {"type": "SPIKE", "x": 47, "y": 0},
                         {"type": "GOAL",  "x": 60, "y": 0}
                     ]
