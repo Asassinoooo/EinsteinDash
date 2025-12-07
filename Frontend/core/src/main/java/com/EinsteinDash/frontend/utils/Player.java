@@ -6,10 +6,14 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.EinsteinDash.frontend.strategies.CubeStrategy;
+import com.EinsteinDash.frontend.strategies.ShipStrategy;
+import com.EinsteinDash.frontend.strategies.MovementStrategy;
 
 public class Player extends Sprite {
     public World world;
     public Body b2body;
+    private MovementStrategy movementStrategy;
 
     // Konstanta kecepatan karakter (2 meter per detik)
     private static final float MOVEMENT_SPEED = 1.25f;
@@ -30,43 +34,24 @@ public class Player extends Sprite {
         setOrigin(getWidth() / 2, getHeight() / 2);
 
         definePlayer();
+        //UBAH MODE DISINI
+        this.movementStrategy = new CubeStrategy();
     }
 
     public void update(float dt) {
-        // Gerak Otomatis ke Kanan (Auto-Runner)
-        // Kita memaksa kecepatan X agar konstan, tapi membiarkan kecepatan Y (gravitasi) bekerja alami.
-        // Jika player menabrak dinding dan melambat, dia akan didorong lagi.
-        if (b2body.getLinearVelocity().x <= MOVEMENT_SPEED) {
-            b2body.setLinearVelocity(new Vector2(MOVEMENT_SPEED, b2body.getLinearVelocity().y));
-        }
+        // DELEGASIKAN UPDATE KE STRATEGY
+        movementStrategy.update(this, dt);
 
-        // Update Posisi Sprite
-        // Sprite di LibGDX dihitung dari pojok kiri-bawah, Box2D dari tengah.
-        // Posisi Body adalah setengah ukuran sprite
+        // Update posisi sprite (Sama untuk semua mode)
         setPosition(
             b2body.getPosition().x - getWidth() / 2,
             b2body.getPosition().y - getHeight() / 2
         );
-
-        // LOGIKA ROTASI
-        // Jika sedang di udara (Velocity Y tidak 0), putar searah jarum jam (-5 derajat per frame)
-        if (Math.abs(b2body.getLinearVelocity().y) > 0.01f) {
-            rotate(-5f);
-        } else {
-            // Jika di tanah, paksa rotasi ke kelipatan 90 terdekat agar kotak mendarat rata
-            float angle = getRotation() % 360;
-            if (angle < 0) angle += 360;
-            // Reset ke 0
-            setRotation(Math.round(getRotation() / 90f) * 90f);
-        }
     }
 
     public void jump() {
-        // Logika Lompat: Hanya boleh lompat jika kecepatan vertikal mendekati 0 (sedang di tanah)
-        // Nilai 0.01f adalah toleransi kecil.
-        if (Math.abs(b2body.getLinearVelocity().y) < 0.01f) {
-            b2body.applyLinearImpulse(new Vector2(0, JUMP_FORCE), b2body.getWorldCenter(), true);
-        }
+        // DELEGASIKAN INPUT KE STRATEGY
+        movementStrategy.handleInput(this);
     }
 
     private void definePlayer() {
@@ -88,8 +73,9 @@ public class Player extends Sprite {
 
         b2body.setGravityScale(0.7f);
 
+        b2body.setUserData(this);
         b2body.createFixture(fdef).setUserData("PLAYER");
-        b2body.setUserData("PLAYER");
+        //b2body.setUserData("PLAYER");
 
         shape.dispose();
     }
@@ -104,4 +90,21 @@ public class Player extends Sprite {
             getTexture().dispose();
         }
     }
+
+    public void setStrategy(MovementStrategy strategy) {
+        this.movementStrategy = strategy;
+
+        // Reset rotasi saat ganti mode agar tidak aneh
+        setRotation(0);
+    }
+
+    public static float getMovementSpeed() {
+        return MOVEMENT_SPEED;
+    }
+
+    public static float getJumpForce() {
+        return JUMP_FORCE;
+    }
+
+
 }

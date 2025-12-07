@@ -23,7 +23,13 @@ public class DataSeeder {
                         {"type": "BLOCK", "x": 20, "y": 1},
                         {"type": "SPIKE", "x": 25, "y": 0},
                         {"type": "COIN",  "x": 30, "y": 2},
-                        {"type": "GOAL",  "x": 50, "y": 0}
+                        {"type": "SPIKE", "x": 40, "y": 0},
+                        {"type": "SPIKE", "x": 41, "y": 0},
+                        {"type": "SPIKE", "x": 42, "y": 0},
+                        {"type": "SPIKE", "x": 47, "y": 0},
+                        {"type": "GOAL",  "x": 50, "y": 0},
+                        {"type": "PORTAL_SHIP", "x": 40, "y": 2}.
+                        {"type": "PORTAL_CUBE", "x": 1, "y": 0}
                     ]
                 """);
                 l1.setStars(1); // Easy
@@ -39,6 +45,10 @@ public class DataSeeder {
                         {"type": "BLOCK", "x": 15, "y": 0},
                         {"type": "BLOCK", "x": 15, "y": 1},
                         {"type": "SPIKE", "x": 20, "y": 0},
+                        {"type": "SPIKE", "x": 40, "y": 0},
+                        {"type": "SPIKE", "x": 41, "y": 0},
+                        {"type": "SPIKE", "x": 42, "y": 0},
+                        {"type": "SPIKE", "x": 47, "y": 0},
                         {"type": "GOAL",  "x": 60, "y": 0}
                     ]
                 """);
