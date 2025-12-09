@@ -37,10 +37,11 @@ public class Spike implements Pool.Poolable {
         // Skala hit-box
         float scale = 1.3f;
         PolygonShape shape = new PolygonShape();
-        Vector2[] vertices = new Vector2[3];
-        vertices[0] = new Vector2((-16 * scale) / Constants.PPM, (-16 * scale) / Constants.PPM);
-        vertices[1] = new Vector2((16 * scale) / Constants.PPM, (-16 * scale) / Constants.PPM);
-        vertices[2] = new Vector2(0, (16 * scale) / Constants.PPM);
+        Vector2[] vertices = new Vector2[4];
+        vertices[0] = new Vector2((-3 * scale) / Constants.PPM, (float)(-5  * scale) / Constants.PPM);
+        vertices[1] = new Vector2((3 * scale) / Constants.PPM, (float)(-5 * scale) / Constants.PPM);
+        vertices[2] = new Vector2((-3 * scale) / Constants.PPM, (float)(6 * scale) / Constants.PPM);
+        vertices[3] = new Vector2((3 * scale) / Constants.PPM, (float)(6 * scale) / Constants.PPM);
         shape.set(vertices);
 
         FixtureDef fdef = new FixtureDef();
