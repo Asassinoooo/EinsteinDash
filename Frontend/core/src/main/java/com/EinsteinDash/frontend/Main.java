@@ -18,6 +18,7 @@ public class Main extends Game {
 
     // Facade untuk komunikasi ke Backend
     public BackendFacade backend;
+    private float musicVolume;
 
     @Override
     public void create() {
@@ -30,6 +31,16 @@ public class Main extends Game {
 
         // Set layar awal ke LoginScreen
         this.setScreen(new LoginScreen(this));
+    }
+
+    // Di class Main.java
+    public float getMusicVolume() {
+        return this.musicVolume;
+    }
+
+    public void setMusicVolume(float vol) {
+        this.musicVolume = vol;
+        // logic update volume music jika ada yang sedang play
     }
 
     @Override

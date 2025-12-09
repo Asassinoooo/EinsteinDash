@@ -14,6 +14,9 @@ import java.util.Iterator;
 public class LevelFactory {
 
     private World world;
+    private float currentFloorY = 0f;
+    private float currentCeilingY = 14f;
+    private final float FLOOR_VISUAL_OFFSET = -0.77f;
     private Texture floorTexture;
     private float levelEndPosition = 100f;
 
@@ -68,7 +71,8 @@ public class LevelFactory {
         freeAll();
 
         // Buat Lantai
-        createFloor();
+        createFloor(0f);
+        createCeiling(2.15f);
 
         if (jsonLevelData == null || jsonLevelData.isEmpty()) return;
 
@@ -121,14 +125,25 @@ public class LevelFactory {
         // Gambar Lantai
         float totalWidthMeters = 750f; // Panjang floor game
         float startX = -50f;    // Posisi X dari -50 di kiri
-        float startY = -0.77f;   // Posisi Y diturunkan 0.8 sesuai ukuran asset
-        float height = 0.8f;    // Tinggi visual: 0.8 meter (sesuai gambar asli 80px)
+
         int u2 = (int) ((totalWidthMeters * Constants.PPM) / 128);  // Hitung looping texture
+        float height = 0.8f;    // Tinggi visual: 0.8 meter (sesuai gambar asli 80px)
+
+        float drawFloorY = currentFloorY + FLOOR_VISUAL_OFFSET;
+
         batch.draw(floorTexture,
-            startX, startY,
+            startX, drawFloorY,
             totalWidthMeters, height,
             0, 0,       // Source X, Y (Mulai dari pojok gambar)
             u2, 1            // Repetisi (Ulang X sebanyak u2 kali, Y 1 kali)
+        );
+
+        // Gambar ceiling
+        float drawCeilingY = currentCeilingY;
+        batch.draw(floorTexture,
+            startX, drawCeilingY,
+            totalWidthMeters, height,
+            0, 1, u2, 0 // Flip Vertikal (v=1, v2=0)
         );
 
         // Gambar Block
@@ -189,14 +204,16 @@ public class LevelFactory {
         activePortals.clear();
     }
 
-    private void createFloor() {
+    private void createFloor(float yPosition) {
+        this.currentFloorY = yPosition;
+
         BodyDef bdef = new BodyDef();
-        bdef.position.set(0, 0);
+        bdef.position.set(0, yPosition);
         bdef.type = BodyDef.BodyType.StaticBody;
         Body body = world.createBody(bdef);
 
         EdgeShape shape = new EdgeShape();
-        shape.set(-50, 0, 1000, 0);
+        shape.set(-50, 0, 5000, 0); // panjang 5000m
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
@@ -204,6 +221,26 @@ public class LevelFactory {
 
         body.createFixture(fdef).setUserData("FLOOR");
         body.setUserData("FLOOR");
+
+        shape.dispose();
+    }
+
+    public void createCeiling(float yPosition) {
+        this.currentCeilingY = yPosition;
+
+        BodyDef bdef = new BodyDef();
+        bdef.position.set(0, yPosition);
+        bdef.type = BodyDef.BodyType.StaticBody;
+        Body body = world.createBody(bdef);
+
+        EdgeShape shape = new EdgeShape();
+        shape.set(-50, 0, 5000, 0); // panjang 5000m
+
+        FixtureDef fdef = new FixtureDef();
+        fdef.shape = shape;
+        fdef.friction = 0;
+
+        body.createFixture(fdef).setUserData("CEILING");
 
         shape.dispose();
     }

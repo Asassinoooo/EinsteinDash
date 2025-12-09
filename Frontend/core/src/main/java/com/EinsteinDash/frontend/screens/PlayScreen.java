@@ -3,6 +3,7 @@ package com.EinsteinDash.frontend.screens;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.scenes.Hud;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -22,6 +23,8 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     private Main game;
     private LevelDto levelData;
+    public enum State { RUNNING, PAUSED }
+    private State currentState = State.RUNNING;
 
     // Camera & Viewport
     private OrthographicCamera gameCam;
@@ -131,6 +134,21 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
         if (isLevelFinished) return;
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            if (currentState == State.RUNNING) {
+                pauseGame();
+            } else {
+                resumeGame();
+            }
+        }
+
+        // --- JIKA PAUSED, STOP UPDATE ---
+        if (currentState == State.PAUSED) {
+            // Kita tetap update Stage HUD agar animasi tombol ditekan tetap jalan
+            hud.stage.act(dt);
+            return; // <-- PENTING: Stop di sini, jangan jalankan fisika di bawah
+        }
+
         inputHandler.handleInput(player);
 
         // --- FIX HITBOX BERGESER (SPIRAL OF DEATH) ---
@@ -226,5 +244,35 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         hud.stage.getViewport().update(width, height);
     }
     @Override public void onCoinCollected() { currentRunCoins++; }
+
+    public void pauseGame() {
+        currentState = State.PAUSED;
+
+        // Munculkan Window Pause
+        Skin skin = game.assets.get("uiskin.json", Skin.class);
+
+        // Buat window baru
+        PauseWindow pauseWindow = new PauseWindow(game, this, skin);
+
+        // Masukkan window ke Stage milik HUD agar terlihat
+        hud.stage.addActor(pauseWindow);
+
+        // Alihkan Input Processor ke Stage agar tombol di Window bisa diklik
+        Gdx.input.setInputProcessor(hud.stage);
+    }
+
+    public void resumeGame() {
+        currentState = State.RUNNING;
+
+        // Kembalikan Input Processor ke null (atau InputHandler game Anda)
+        // Agar player bisa loncat lagi dengan tombol Spasi/Mouse
+        Gdx.input.setInputProcessor(null);
+    }
+
+    public void restartLevel() {
+        // Reload screen ini dengan data level yang sama
+        game.setScreen(new PlayScreen(game, levelData));
+    }
+
     @Override public void dispose() { world.dispose(); b2dr.dispose(); player.dispose(); hud.dispose(); }
 }
