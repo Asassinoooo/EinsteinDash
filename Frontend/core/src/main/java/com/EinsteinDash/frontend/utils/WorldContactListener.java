@@ -21,109 +21,103 @@ public class WorldContactListener implements ContactListener {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
 
-        // Cek apakah salah satu adalah Player
         if (isPlayer(fixA) || isPlayer(fixB)) {
             Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
             Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
 
-            // Ambil Data dari Body (Untuk Object: Player, Coin, Portal)
             Object playerBodyData = playerFix.getBody().getUserData();
             Object otherBodyData = otherFix.getBody().getUserData();
-
-            // Ambil Data dari Fixture (Untuk String: Spike, Block, Goal)
             Object otherFixtureData = otherFix.getUserData();
 
-            // =============================================================
-            // 1. LOGIKA OBJECT (Portal & Coin)
-            // =============================================================
-
-            // Cek Portal (Ganti Strategy)
+            // 1. OBJECTS (Portal & Coin)
             if (otherBodyData instanceof Portal) {
                 Portal portal = (Portal) otherBodyData;
-
-                // Kita butuh akses ke object Player untuk ganti strategi
                 if (playerBodyData instanceof Player) {
                     Player player = (Player) playerBodyData;
-
                     if ("PORTAL_SHIP".equals(portal.getType())) {
-                        System.out.println("SWITCH TO SHIP!");
                         player.setStrategy(new ShipStrategy());
-                    }
-                    else if ("PORTAL_CUBE".equals(portal.getType())) {
-                        System.out.println("SWITCH TO CUBE!");
+                    } else if ("PORTAL_CUBE".equals(portal.getType())) {
                         player.setStrategy(new CubeStrategy());
                     }
                 }
             }
-
-            // Cek Coin (Collect)
             else if (otherBodyData instanceof Coin) {
                 Coin coin = (Coin) otherBodyData;
                 if (!coin.isCollected()) {
                     coin.collect();
-                    System.out.println("COIN COLLECTED! +1 Score");
-                    for(GameObserver o : observers) {
-                        o.onCoinCollected();
-                    }
+                    for(GameObserver o : observers) o.onCoinCollected();
                 }
             }
 
-            // =============================================================
-            // 2. LOGIKA STRING (Spike, Block, Goal)
-            // =============================================================
+            // 2. BLOCKS & GROUND (Logic Deteksi Tanah & Mati)
             else if (otherFixtureData != null) {
                 String type = otherFixtureData.toString();
 
                 if (type.equals("SPIKE")) {
                     notifyPlayerDied();
                 }
-                else if (type.equals("BLOCK")) {
-                    // --- LOGIKA DETEKSI TABRAKAN SAMPING (TEMBOK) ---
-                    Body playerBody = playerFix.getBody();
-                    Body blockBody = otherFix.getBody();
+                else if (type.equals("BLOCK") || type.equals("FLOOR")) {
+                    // Logic Deteksi Tabrakan
+                    // Apakah ini lantai (aman) atau tembok (mati)?
 
-                    // Hitung posisi Y
-                    float playerY = playerBody.getPosition().y;
-                    float blockY = blockBody.getPosition().y;
+                    boolean isSafeLanding = true;
 
-                    // Hitung batas kaki player dan batas atas balok
-                    // (Asumsi ukuran di LevelFactory & Player adalah 16px dan 15px radius)
-                    float playerBottom = playerY - (15 / Constants.PPM);
-                    float blockTop = blockY + (16 / Constants.PPM);
+                    // Khusus BLOCK, kita cek tabrakan samping
+                    if (type.equals("BLOCK")) {
+                        Body playerBody = playerFix.getBody();
+                        Body blockBody = otherFix.getBody();
 
-                    // Toleransi kecil (0.05f)
-                    float tolerance = 0.05f;
+                        float playerBottom = playerBody.getPosition().y - (15 / Constants.PPM);
+                        float blockTop = blockBody.getPosition().y + (16 / Constants.PPM);
+                        float tolerance = 0.05f;
 
-                    // Jika kaki player berada di bawah permukaan balok saat menyentuhnya...
-                    if (playerBottom < blockTop - tolerance) {
-                        System.out.println("CRASHED WALL!");
-                        notifyPlayerDied();
-                    } else {
-                        // Mendarat di atas (Aman)
+                        // Jika kaki player DI BAWAH permukaan balok, berarti nabrak samping/bawah
+                        if (playerBottom < blockTop - tolerance) {
+                            isSafeLanding = false;
+                            System.out.println("CRASHED WALL!");
+                            notifyPlayerDied();
+                        }
+                    }
+
+                    // Jika Aman (Mendarat di atas), tambahkan sensor kaki
+                    if (isSafeLanding && playerBodyData instanceof Player) {
+                        ((Player) playerBodyData).addFootContact();
                     }
                 }
                 else if (type.equals("GOAL")) {
-                    System.out.println("WINNER!");
                     notifyLevelCompleted();
                 }
             }
         }
     }
 
-    // Helper untuk cek apakah fixture ini punya tag "PLAYER"
+    @Override
+    public void endContact(Contact contact) {
+        Fixture fixA = contact.getFixtureA();
+        Fixture fixB = contact.getFixtureB();
+
+        if (isPlayer(fixA) || isPlayer(fixB)) {
+            Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
+            Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
+
+            Object playerBodyData = playerFix.getBody().getUserData();
+            Object otherFixtureData = otherFix.getUserData();
+
+            // Saat meninggalkan tanah/blok, kurangi sensor kaki
+            if (playerBodyData instanceof Player && otherFixtureData != null) {
+                String type = otherFixtureData.toString();
+                if (type.equals("BLOCK") || type.equals("FLOOR")) {
+                    ((Player) playerBodyData).removeFootContact();
+                }
+            }
+        }
+    }
+
     private boolean isPlayer(Fixture fix) {
         return fix.getUserData() != null && fix.getUserData().equals("PLAYER");
     }
-
-    private void notifyPlayerDied() {
-        for (GameObserver o : observers) o.onPlayerDied();
-    }
-
-    private void notifyLevelCompleted() {
-        for (GameObserver o : observers) o.onLevelCompleted();
-    }
-
-    @Override public void endContact(Contact contact) {}
+    private void notifyPlayerDied() { for (GameObserver o : observers) o.onPlayerDied(); }
+    private void notifyLevelCompleted() { for (GameObserver o : observers) o.onLevelCompleted(); }
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}
     @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 }
