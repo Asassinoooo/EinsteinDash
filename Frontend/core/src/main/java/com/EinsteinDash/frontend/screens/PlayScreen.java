@@ -121,7 +121,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
 
-        // b2dr.render(world, gameCam.combined);   // debug (outline hijau)
+        //b2dr.render(world, gameCam.combined);   // debug (outline hijau)
     }
 
     private void update(float dt) {

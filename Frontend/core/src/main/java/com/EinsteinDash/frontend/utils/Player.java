@@ -65,7 +65,7 @@ public class Player extends Sprite {
         PolygonShape shape = new PolygonShape();
 
         // Ukuran Kotak: 15x15 piksel (Total lebar 30px)
-        shape.setAsBox(15 / Constants.PPM, 15 / Constants.PPM);
+        shape.setAsBox((float)15 / Constants.PPM, (float)15 / Constants.PPM);
 
         fdef.shape = shape;
         fdef.friction = 0;

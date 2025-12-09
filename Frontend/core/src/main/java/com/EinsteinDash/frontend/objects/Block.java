@@ -38,7 +38,7 @@ public class Block implements Pool.Poolable {
         body = world.createBody(bdef);
 
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(16 / Constants.PPM, 16 / Constants.PPM);
+        shape.setAsBox(16 / Constants.PPM, 14 / Constants.PPM);
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;

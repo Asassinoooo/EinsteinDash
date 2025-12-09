@@ -119,9 +119,9 @@ public class LevelFactory {
     // Hanya menggambar objek yang ada di daftar aktif
     public void draw(SpriteBatch batch) {
         // Gambar Lantai
-        float totalWidthMeters = 1000f; // Panjang floor game
+        float totalWidthMeters = 750f; // Panjang floor game
         float startX = -50f;    // Posisi X dari -50 di kiri
-        float startY = -0.78f;   // Posisi Y diturunkan 0.8 sesuai ukuran asset
+        float startY = -0.77f;   // Posisi Y diturunkan 0.8 sesuai ukuran asset
         float height = 0.8f;    // Tinggi visual: 0.8 meter (sesuai gambar asli 80px)
         int u2 = (int) ((totalWidthMeters * Constants.PPM) / 128);  // Hitung looping texture
         batch.draw(floorTexture,
