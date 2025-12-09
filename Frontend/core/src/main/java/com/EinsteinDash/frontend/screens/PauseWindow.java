@@ -74,7 +74,7 @@ public class PauseWindow extends Window {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.log("UI", "Restarting Level...");
-                playScreen.restartLevel();
+                playScreen.onPlayerDied();
             }
         });
 
