@@ -2,7 +2,6 @@ package com.EinsteinDash.frontend.screens;
 
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.scenes.Hud;
-import com.EinsteinDash.frontend.screens.LevelCompletedWindow;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
@@ -18,9 +17,6 @@ import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.utils.*;
 import com.EinsteinDash.frontend.input.InputHandler;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.physics.box2d.Body;
 
 public class PlayScreen extends ScreenAdapter implements GameObserver {
 
@@ -41,19 +37,20 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     private InputHandler inputHandler;
 
     private float deadTimer = 0;
-
-    // Game State
     private boolean isDead = false;
     private boolean isLevelFinished = false;
 
     private Hud hud;
-    private int currentRunCoins = 0;    // tracker koin
+    private int currentRunCoins = 0;
+
+    // --- OPTIMASI FISIKA (Fixed Time Step) ---
+    private float accumulator = 0;
+    private static final float TIME_STEP = 1 / 60f; // Target Fisika: 60 update per detik
 
     public PlayScreen(Main game, LevelDto levelData) {
         this.game = game;
         this.levelData = levelData;
 
-        // Inisialisasi Box2D
         Box2D.init();
 
         // Setup Camera
@@ -64,211 +61,161 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
             gameCam
         );
 
-        // Setup World Fisika
-        world = new World(new Vector2(0, -10), true); // Gravitasi standar -10
+        // GRAVITASI: -26f (Sesuai request)
+        world = new World(new Vector2(0, -26f), true);
+
         b2dr = new Box2DDebugRenderer();
 
-        // Pasang Contact Listener (Observer Pattern untuk deteksi tabrakan)
         WorldContactListener contactListener = new WorldContactListener();
-        contactListener.addObserver(this); // Daftarkan layar ini agar tahu kalau player mati
+        contactListener.addObserver(this);
         world.setContactListener(contactListener);
 
-        // Generate Level dari JSON
         levelFactory = new LevelFactory(world);
         if (this.levelData != null && this.levelData.getLevelData() != null) {
             levelFactory.createLevel(this.levelData.getLevelData());
+            // levelFactory.createCeiling(0, 1000); // Pastikan buat method ini di LevelFactory untuk Ship
         }
 
-        // Spawn Player & Input
         player = new Player(world);
         inputHandler = new InputHandler();
 
-        // Set posisi kamera awal agar pas saat spawn
-        updateCameraPosition();
+        // Setup awal kamera
+        float startX = player.b2body.getPosition().x + (gamePort.getWorldWidth() / 4);
+        gameCam.position.set(startX, gamePort.getWorldHeight() / 3, 0);
+        gameCam.update();
 
         hud = new Hud(game.batch);
-        currentRunCoins = 0;    // reset coin
+        currentRunCoins = 0;
     }
 
     @Override
     public void show() {
-        // Agar klik mouse saat main tidak memencet tombol "Back" yang tersembunyi
         Gdx.input.setInputProcessor(null);
     }
 
     @Override
     public void render(float delta) {
+        // Pisahkan logika update dan draw
         update(delta);
 
+        // Clear Screen
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Render Gambar
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
 
-        // Gambar Player
+        // Gambar Player (posisi visual hasil interpolasi)
         player.draw(game.batch);
 
-        // Gambar Level
         levelFactory.draw(game.batch);
-
         game.batch.end();
 
-        // Update data HUD
-        hud.update(player.b2body.getPosition().x, levelFactory.getLevelEndPosition());
-
+        // HUD
+        hud.update(player.getInterpolatedPosition().x, levelFactory.getLevelEndPosition());
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
 
-        //b2dr.render(world, gameCam.combined);   // debug (outline hijau)
+        // Debug Renderer (Uncomment jika ingin lihat kotak hijau)
+        b2dr.render(world, gameCam.combined);
     }
 
     private void update(float dt) {
-        // Jika mati, hentikan update logika (agar game freeze sebentar sebelum restart)
         if (isDead) {
-            // Jika mati, jangan update fisika player, tapi jalankan timer
             deadTimer += dt;
-            if (deadTimer > 0.5f) { // Tunggu 0,5 detik baru restart
+            if (deadTimer > 0.5f) {
                 game.setScreen(new PlayScreen(game, levelData));
             }
             return;
         }
 
-        if (isLevelFinished) return;    // jika game selesai, freeze
+        if (isLevelFinished) return;
 
-        // 1. Handle Input
         inputHandler.handleInput(player);
 
-        // 2. Step World (Simulasi Fisika 60fps)
-        world.step(1/60f, 6, 2);
-        levelFactory.removeCollectedCoins();    // Menghapus koin
+        // --- FIX HITBOX BERGESER (SPIRAL OF DEATH) ---
+        // Batasi dt maksimal. Jika debugging (dt jadi besar), kita potong jadi maksimal 5 frame.
+        // Ini mencegah loop while di bawah berjalan ratusan kali dan membuat hitbox kabur.
+        float frameTime = Math.min(dt, 5 * TIME_STEP);
+        accumulator += frameTime;
 
-        // 3. Update Player
+        while (accumulator >= TIME_STEP) {
+            // 1. Simpan posisi fisik lama
+            player.capturePreviousPosition();
+
+            // 2. Step Fisika
+            world.step(TIME_STEP, 6, 2);
+            accumulator -= TIME_STEP;
+
+            // Logika game lain yang butuh sinkronisasi fisika
+            levelFactory.removeCollectedCoins();
+        }
+
+        // 3. Hitung Alpha untuk Interpolasi (Sisa waktu)
+        float alpha = accumulator / TIME_STEP;
+
+        // 4. Update Visual Player (Interpolasi & Animasi Rotasi)
         player.update(dt);
+        player.updateVisual(alpha);
 
-        // 4. Update Kamera (Follow Player)
-        updateCameraPosition();
+        // 5. Kamera mengikuti posisi visual player
+        updateCameraPositionSmooth();
+    }
+
+    private void updateCameraPositionSmooth() {
+        Vector2 targetPos = player.getInterpolatedPosition();
+
+        float targetX = targetPos.x + (gamePort.getWorldWidth() / 4);
+        float minX = gamePort.getWorldWidth() / 2;
+        if (targetX < minX) targetX = minX;
+
+        // Lerp 0.1f agar pergerakan kamera halus di 60/144hz
+        float lerpFactor = 0.1f;
+        gameCam.position.x += (targetX - gameCam.position.x) * lerpFactor;
+        gameCam.position.y = gamePort.getWorldHeight() / 3;
+
         gameCam.update();
     }
 
-    private void updateCameraPosition() {
-        // --- LOGIKA POSISI X (Kiri-Kanan) ---
-        // Agar player terlihat di KIRI layar (bukan tengah), kamera harus di DEPAN player.
-        // Kita geser kamera ke kanan sejauh 1/4 lebar layar dari posisi player.
-        float targetCamX = player.b2body.getPosition().x + (gamePort.getWorldWidth() / 4);
-
-        // Batasi kamera agar tidak mundur melewati garis start (x=0)
-        // Setengah lebar layar adalah batas minimal kamera
-        float minCamX = gamePort.getWorldWidth() / 2;
-        if (targetCamX < minCamX) {
-            targetCamX = minCamX;
-        }
-        gameCam.position.x = targetCamX;
-
-        // --- LOGIKA POSISI Y (Atas-Bawah) ---
-        gameCam.position.y = gamePort.getWorldHeight() / 3;
-    }
-
-    // --- IMPLEMENTASI GAME OBSERVER ---
-
+    // --- OBSERVER METHODS (Tidak Berubah) ---
     @Override
     public void onPlayerDied() {
         if (!isDead) {
             isDead = true;
-
             int userId = Session.getInstance().getUserId();
             int percentage = hud.getPercentage();
             game.backend.syncProgress(userId, levelData.getId(), percentage, 1, 0, new BackendFacade.SyncCallback() {
-
-                @Override
-                public void onSuccess(int serverCoins, boolean serverCompleted) {
-                    Gdx.app.log("SYNC", "Success, attempt +1");
-
-                }
-
-                @Override
-                public void onFailed(String error) {
-                    Gdx.app.error("SYNC", "Failed: " + error);
-                }
+                @Override public void onSuccess(int s, boolean c) {}
+                @Override public void onFailed(String e) {}
             });
-
-            Gdx.app.log("GAME", "PLAYER MATI! Restarting level...");
+            Gdx.app.log("GAME", "PLAYER MATI!");
         }
     }
 
     @Override
     public void onLevelCompleted() {
-        if (isLevelFinished) return; // Cegah panggil 2x
+        if (isLevelFinished) return;
         isLevelFinished = true;
-
-
-        Gdx.app.log("GAME", "LEVEL COMPLETE!");
-        //data lama sebelum sync
+        int userId = Session.getInstance().getUserId();
         boolean wasCompletedBefore = levelData.isCompleted();
         int coinsBefore = levelData.getCoinsCollected();
 
-        int userId = Session.getInstance().getUserId();
-
-
-        // Kirim data ke backend (Sync)
         game.backend.syncProgress(userId, levelData.getId(), 100, 1, currentRunCoins, new BackendFacade.SyncCallback() {
-
             @Override
             public void onSuccess(int serverCoins, boolean serverCompleted) {
-                // Method ini dipanggil SETELAH database selesai update
-
-                Gdx.app.log("SYNC", "Data Server -> Coins: " + serverCoins + ", Completed: " + serverCompleted);
-
-                // --- 3. HITUNG REWARD BERDASARKAN SELISIH DATA ---
-
-                // Hitung Bintang:
-                // Jika dulu BELUM completed, dan sekarang Server bilang COMPLETED -> Dapat Bintang
-                int starsEarned = 0;
-                if (!wasCompletedBefore && serverCompleted) {
-                    starsEarned = levelData.getStars();
-                }
-
-                // Hitung Koin:
-                // Koin Baru = Total di Server - Total di Local (Dulu)
-                // Contoh: Server punya 3, Dulu punya 1. Berarti baru dapet 2.
+                int starsEarned = (!wasCompletedBefore && serverCompleted) ? levelData.getStars() : 0;
                 int coinsEarned = Math.max(0, serverCoins - coinsBefore);
-
-                // --- 4. UPDATE DATA LOKAL UNTUK SESI BERIKUTNYA ---
                 levelData.setCompleted(serverCompleted);
                 levelData.setCoinsCollected(serverCoins);
-
-                // --- 5. TAMPILKAN WINDOW (Dengan data valid dari server) ---
-                LevelCompletedWindow win = new LevelCompletedWindow(
-                    game,
-                    game.assets.get("uiskin.json", Skin.class),
-                    levelData,
-                    starsEarned,
-                    coinsEarned,
-                    currentRunCoins
-                );
-
+                LevelCompletedWindow win = new LevelCompletedWindow(game, game.assets.get("uiskin.json", Skin.class), levelData, starsEarned, coinsEarned, currentRunCoins);
                 hud.stage.addActor(win);
                 Gdx.input.setInputProcessor(hud.stage);
             }
-
             @Override
             public void onFailed(String error) {
-                Gdx.app.error("SYNC", "Failed: " + error);
-
-                // Fallback: Jika internet mati, tampilkan window dengan hitungan lokal (agar game tidak macet)
-                //malazz -1 aja kalo gak ada internet
-                LevelCompletedWindow win = new LevelCompletedWindow(
-                    game,
-                    game.assets.get("uiskin.json", Skin.class),
-                    levelData,
-                    -1,
-                    -1,
-                    currentRunCoins
-                );
-
-                hud.stage.addActor(win); // Pasang ke layar
-                Gdx.input.setInputProcessor(hud.stage); // Alihkan input ke HUD Stage
+                LevelCompletedWindow win = new LevelCompletedWindow(game, game.assets.get("uiskin.json", Skin.class), levelData, -1, -1, currentRunCoins);
+                hud.stage.addActor(win);
+                Gdx.input.setInputProcessor(hud.stage);
             }
         });
     }
@@ -278,18 +225,6 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         gamePort.update(width, height);
         hud.stage.getViewport().update(width, height);
     }
-
-    @Override
-    public void onCoinCollected() {
-        currentRunCoins++;
-        System.out.println("Coin UI Updated!");
-    }
-
-    @Override
-    public void dispose() {
-        world.dispose();
-        b2dr.dispose();
-        player.dispose();
-        hud.dispose();
-    }
+    @Override public void onCoinCollected() { currentRunCoins++; }
+    @Override public void dispose() { world.dispose(); b2dr.dispose(); player.dispose(); hud.dispose(); }
 }
