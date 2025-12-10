@@ -74,8 +74,8 @@ public class WorldContactListener implements ContactListener {
                     if (type.equals("BLOCK") || type.equals("FLOOR")) {
                         if (playerBodyData instanceof Player) {
                             Player player = (Player) playerBodyData;
-                            if (player.getMovementStrategy() instanceof RobotStrategy) {
-                                RobotStrategy robotStrategy = ((RobotStrategy) player.getMovementStrategy());
+                            if (player.getStrategy() instanceof RobotStrategy) {
+                                RobotStrategy robotStrategy = ((RobotStrategy) player.getStrategy());
                                 robotStrategy.setJumpTimer(0f);
                             }
                         }
@@ -87,7 +87,7 @@ public class WorldContactListener implements ContactListener {
                             Player player = (Player) playerBodyData;
 
                             // --- MODIFIKASI: HANYA CEK DINDING JIKA MODE CUBE ---
-                            if (player.getMovementStrategy() instanceof CubeStrategy || player.getMovementStrategy() instanceof RobotStrategy) {
+                            if (player.getStrategy() instanceof CubeStrategy || player.getStrategy() instanceof RobotStrategy) {
 
                                 Body playerBody = playerFix.getBody();
                                 Body blockBody = otherFix.getBody();
@@ -103,7 +103,7 @@ public class WorldContactListener implements ContactListener {
                                     notifyPlayerDied();
                                 }
                             }
-                            else if (player.getMovementStrategy() instanceof WaveStrategy) {
+                            else if (player.getStrategy() instanceof WaveStrategy) {
                                 notifyPlayerDied();
                                 return; // Stop logic
 
@@ -113,12 +113,12 @@ public class WorldContactListener implements ContactListener {
                                 // Jika Anda ingin Wave mati kena lantai dasar juga, uncomment notifyPlayerDied di bawah.
                                 // notifyPlayerDied();
                             }
-                            else if (player.getMovementStrategy() instanceof BallStrategy ||
-                                player.getMovementStrategy() instanceof ShipStrategy ||
-                                player.getMovementStrategy() instanceof SpiderStrategy ||
-                                player.getMovementStrategy() instanceof UfoStrategy) {
+                            else if (player.getStrategy() instanceof BallStrategy ||
+                                player.getStrategy() instanceof ShipStrategy ||
+                                player.getStrategy() instanceof SpiderStrategy ||
+                                player.getStrategy() instanceof UfoStrategy) {
                                 if (checkSideCollision(playerFix.getBody(), otherFix.getBody())) {
-                                    System.out.println("CRASH SIDE! (Mode: " + player.getMovementStrategy().getClass().getSimpleName() + ")");
+                                    System.out.println("CRASH SIDE! (Mode: " + player.getStrategy().getClass().getSimpleName() + ")");
                                     notifyPlayerDied();
                                 } else {
                                     // Jika tidak mati (berarti kena atas/bawah), tambahkan kontak kaki

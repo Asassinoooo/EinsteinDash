@@ -8,7 +8,7 @@ import com.EinsteinDash.frontend.utils.Player;
 public class ShipStrategy implements MovementStrategy {
 
     private static final float SHIP_GRAVITY_SCALE = 0.5f;
-    private static final float SHIP_UPWARD_FORCE = 27f;
+    private static final float SHIP_UPWARD_FORCE = 28f;
     private static final float MAX_VERTICAL_SPEED = 3.5f;
 
     @Override

@@ -7,48 +7,58 @@ import com.EinsteinDash.frontend.utils.Player;
 
 public class BallStrategy implements MovementStrategy {
 
-    // Timer buffer kecil agar tidak spam tombol
-    private float bufferTimer = 0;
+    // Cooldown untuk mencegah double-flip instan
+    private float cooldownTimer = 0;
+
+    // Buffer input (agar responsif saat mendarat)
+    private float inputBufferTimer = 0;
+
+    // Tuning
+    private static final float COOLDOWN_TIME = 0.2f; // Naikkan sedikit agar aman
+    private static final float BUFFER_TIME = 0.1f;   // Jendela buffer
 
     @Override
     public void update(Player player, float dt) {
-        // 1. Gerak Horizontal Konstan
+        // 1. Gerak Horizontal
         Vector2 vel = player.b2body.getLinearVelocity();
         if (vel.x < player.getMovementSpeed()) {
             player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
         }
 
-        // 2. Buffer Timer (Cooldown sangat kecil)
-        if (bufferTimer > 0) bufferTimer -= dt;
+        // 2. Kurangi Timer
+        if (cooldownTimer > 0) cooldownTimer -= dt;
+        if (inputBufferTimer > 0) inputBufferTimer -= dt;
     }
 
     @Override
     public void handleInput(Player player) {
-        // Input: Sekali Tekan (Just Pressed)
         boolean isPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
             Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
             Gdx.input.justTouched();
 
         if (isPressed) {
-            // SYARAT: Harus menyentuh permukaan (isOnGround) DAN cooldown habis
-            // Catatan: isOnGround() akan return true baik di lantai maupun di atap,
-            // selama atap tersebut adalah object "BLOCK" atau "FLOOR".
-            if (player.isOnGround() && bufferTimer <= 0) {
+            inputBufferTimer = BUFFER_TIME;
+        }
 
-                // --- LOGIKA FLIP GRAVITASI ---
+        // SYARAT GANTI GRAVITASI:
+        // 1. Buffer Input Aktif
+        // 2. Cooldown Habis
+        // 3. Sensor Kaki Menyentuh Tanah (isOnGround)
+        // 4. [FIX UTAMA] Kecepatan Y mendekati 0.
+        //    Jika bola sedang terbang naik/turun kencang (Vel Y > 0.5),
+        //    berarti dia di udara (apapun kata sensor kontak).
+        boolean isPhysicallyOnGround = Math.abs(player.b2body.getLinearVelocity().y) < 1.0f;
 
-                // Ambil gravitasi saat ini (bisa 1 atau -1)
-                float currentGravity = player.b2body.getGravityScale();
+        if (inputBufferTimer > 0 && cooldownTimer <= 0 && player.isOnGround() && isPhysicallyOnGround) {
 
-                // Balik nilainya (1 jadi -1, -1 jadi 1)
-                player.b2body.setGravityScale(currentGravity * -1);
+            // Flip Gravitasi
+            float currentGravity = player.b2body.getGravityScale();
+            player.b2body.setGravityScale(currentGravity * -1);
+            player.b2body.setAwake(true);
 
-                // PENTING: Bangunkan body Box2D agar perubahan fisika langsung terasa
-                player.b2body.setAwake(true);
-
-                // Set cooldown kecil (0.1 detik)
-                bufferTimer = 0f;
-            }
+            // Set Cooldown
+            cooldownTimer = COOLDOWN_TIME;
+            inputBufferTimer = 0;
         }
     }
 }

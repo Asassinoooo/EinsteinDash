@@ -8,8 +8,8 @@ import com.EinsteinDash.frontend.utils.Player;
 public class UfoStrategy implements MovementStrategy {
 
     // Tuning Fisika UFO
-    private static final float UFO_JUMP_FORCE = 5.5f; // Hentakan lebih kecil dari Cube (karena bisa spam)
-    private static final float MAX_UFO_VELOCITY = 5.0f; // Batas kecepatan agar tidak tembus atap saat spam
+    private static final float UFO_JUMP_FORCE = 4.5f; // Hentakan lebih kecil dari Cube (karena bisa spam)
+    private static final float MAX_UFO_VELOCITY = 3.5f; // Batas kecepatan agar tidak tembus atap saat spam
 
     @Override
     public void update(Player player, float dt) {
@@ -20,7 +20,7 @@ public class UfoStrategy implements MovementStrategy {
         }
 
         // 2. Gravitasi Normal
-        player.b2body.setGravityScale(1f);
+        player.b2body.setGravityScale(0.5f);
 
         // 3. Batasi Kecepatan Jatuh/Naik (Optional, biar lebih terkontrol)
         if (vel.y > MAX_UFO_VELOCITY) {
