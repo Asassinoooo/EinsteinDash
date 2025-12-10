@@ -23,7 +23,7 @@ public class ShipStrategy implements MovementStrategy {
             player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
         }
 
-        player.b2body.setGravityScale(GRAVITY_SCALE);
+        player.b2body.setGravityScale(SHIP_GRAVITY_SCALE);
 
         // Terbang ke atas saat tombol ditahan
         boolean isHolding = Gdx.input.isTouched() ||
@@ -31,7 +31,7 @@ public class ShipStrategy implements MovementStrategy {
             Gdx.input.isKeyPressed(Input.Keys.UP);
 
         if (isHolding) {
-            player.b2body.applyForceToCenter(0, UPWARD_FORCE, true);
+            player.b2body.applyForceToCenter(0, SHIP_UPWARD_FORCE, true);
         }
 
         // Batasi kecepatan vertikal

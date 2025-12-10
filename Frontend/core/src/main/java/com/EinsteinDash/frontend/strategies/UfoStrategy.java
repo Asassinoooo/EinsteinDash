@@ -27,8 +27,8 @@ public class UfoStrategy implements MovementStrategy {
         player.b2body.setGravityScale(0.5f);
 
         // Batasi kecepatan agar tidak tembus ceiling
-        if (vel.y > MAX_VELOCITY) {
-            player.b2body.setLinearVelocity(vel.x, MAX_VELOCITY);
+        if (vel.y > MAX_UFO_VELOCITY) {
+            player.b2body.setLinearVelocity(vel.x, MAX_UFO_VELOCITY);
         }
     }
 
@@ -43,7 +43,7 @@ public class UfoStrategy implements MovementStrategy {
             // Reset velocity Y untuk lompatan konsisten
             player.b2body.setLinearVelocity(player.b2body.getLinearVelocity().x, 0);
             player.b2body.applyLinearImpulse(
-                new Vector2(0, JUMP_FORCE),
+                new Vector2(0, UFO_JUMP_FORCE),
                 player.b2body.getWorldCenter(),
                 true
             );

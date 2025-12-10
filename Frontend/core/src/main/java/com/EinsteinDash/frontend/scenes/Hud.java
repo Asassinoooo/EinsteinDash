@@ -87,6 +87,7 @@ public class Hud {
 
     public int getPercentage() {
         return (int) progressBar.getValue();
+    }
     
     // --- KONTROL PAUSE MENU ---
     public void showPauseWindow(PauseWindow window) {
@@ -104,10 +105,6 @@ public class Hud {
             currentPauseWindow.remove(); // Hapus dari layar
             currentPauseWindow = null;   // Reset variable
         }
-    }
-
-    public void dispose() {
-        stage.dispose();
     }
 
     // ==================== DISPOSE ====================

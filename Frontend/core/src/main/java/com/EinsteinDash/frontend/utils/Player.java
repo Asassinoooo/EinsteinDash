@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.EinsteinDash.frontend.strategies.*;
 
 public class Player extends Sprite {
@@ -109,11 +108,6 @@ public class Player extends Sprite {
     public boolean isOnGround() { return footContacts > 0; }
 
     // ==================== INTERPOLATION ====================
-
-    /** Reset posisi interpolasi ke posisi fisik saat ini */
-    public void capturePreviousPosition() { previousPosition.set(b2body.getPosition()); }
-
-    public Vector2 getInterpolatedPosition() { return interpolatedPosition; }
 
     public void resetInterpolation() {
         previousPosition.set(b2body.getPosition());
