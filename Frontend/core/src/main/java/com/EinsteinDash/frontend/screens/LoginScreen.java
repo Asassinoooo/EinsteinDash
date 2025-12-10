@@ -3,6 +3,7 @@ package com.EinsteinDash.frontend.screens;
 import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.utils.GamePalette;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -71,6 +72,9 @@ public class LoginScreen extends ScreenAdapter {
         TextButton registerButton = new TextButton("No account? Register here", skin);
         registerButton.getLabel().setFontScale(0.8f);
 
+        TextButton guestButton = new TextButton("PLAY AS GUEST / OFFLINE", skin);
+        guestButton.setColor(GamePalette.Neon.CYAN);
+
         statusLabel = new Label("", skin);
 
         // Enter navigation: username -> password
@@ -105,6 +109,7 @@ public class LoginScreen extends ScreenAdapter {
         table.add(passwordField).width(200).padBottom(20).row();
         table.add(loginButton).width(100).padBottom(10).row();
         table.add(registerButton).padBottom(10).row();
+        table.add(guestButton).padBottom(10).row(); // Add Guest Button
         table.add(statusLabel).row();
         stage.addActor(table);
 
@@ -120,6 +125,14 @@ public class LoginScreen extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new RegisterScreen(game));
+            }
+        });
+
+        guestButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                com.EinsteinDash.frontend.utils.Session.getInstance().setGuestMode();
+                game.setScreen(new MenuScreen(game));
             }
         });
     }

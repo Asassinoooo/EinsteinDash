@@ -76,10 +76,22 @@ public class MenuScreen extends ScreenAdapter {
         table.add(userLabel).colspan(2).padBottom(10).row();
         table.add(starsLabel).colspan(2).padBottom(10).row(); // Reduced padding
         table.add(coinsLabel).colspan(2).padBottom(30).row(); // Added coins row
-        table.add(playButton).width(200).height(50).padBottom(20).padRight(10);
-        table.add(leaderboardButton).width(200).height(50).padBottom(20).padLeft(10).row();
-        table.add(logoutButton).width(200).height(50).padBottom(20).padRight(10);
-        table.add(exitButton).width(200).height(50).padBottom(20).padLeft(10).row();
+
+        // Buttons Layout Logic
+        if (session.isGuest()) {
+            // GUEST: Centered Single Column
+            table.add(playButton).width(200).height(50).padBottom(20).row();
+            // Leaderboard hidden
+            table.add(logoutButton).width(200).height(50).padBottom(20).row();
+            table.add(exitButton).width(200).height(50).padBottom(20).row();
+        } else {
+            // LOGGED IN: Side-by-Side
+            table.add(playButton).width(200).height(50).padBottom(20).padRight(10);
+            table.add(leaderboardButton).width(200).height(50).padBottom(20).padLeft(10).row();
+
+            table.add(logoutButton).width(200).height(50).padBottom(20).padRight(10);
+            table.add(exitButton).width(200).height(50).padBottom(20).padLeft(10).row();
+        }
 
         stage.addActor(table);
 

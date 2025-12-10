@@ -35,7 +35,10 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     private LevelDto levelData;
 
     // === GAME STATE ===
-    public enum State { RUNNING, PAUSED }
+    public enum State {
+        RUNNING, PAUSED
+    }
+
     private State currentState = State.RUNNING;
     private boolean isDead = false;
     private boolean isLevelFinished = false;
@@ -58,7 +61,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     // === FIXED TIMESTEP (untuk physics stabil) ===
     private float accumulator = 0;
-    private static final float TIME_STEP = 1 / 60f;  // 60 FPS physics
+    private static final float TIME_STEP = 1 / 60f; // 60 FPS physics
 
     // ==================== CONSTRUCTOR ====================
 
@@ -71,10 +74,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Setup camera dengan zoom yang sesuai
         gameCam = new OrthographicCamera();
         gamePort = new FitViewport(
-            (Constants.V_WIDTH / Constants.PPM) / 2.5f,
-            (Constants.V_HEIGHT / Constants.PPM) / 2.5f,
-            gameCam
-        );
+                (Constants.V_WIDTH / Constants.PPM) / 2.5f,
+                (Constants.V_HEIGHT / Constants.PPM) / 2.5f,
+                gameCam);
 
         // Buat world dengan gravitasi tinggi (gameplay cepat)
         world = new World(new Vector2(0, -26f), true);
@@ -109,7 +111,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(null);  // Input dihandle manual
+        Gdx.input.setInputProcessor(null); // Input dihandle manual
 
         // Play music dari awal setiap kali level dimulai/restart/player mati
         if (levelData != null) {
@@ -150,12 +152,13 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         if (isDead) {
             deadTimer += dt;
             if (deadTimer > 0.5f) {
-                game.setScreen(new PlayScreen(game, levelData));  // Restart
+                game.setScreen(new PlayScreen(game, levelData)); // Restart
             }
             return;
         }
 
-        if (isLevelFinished) return;
+        if (isLevelFinished)
+            return;
 
         // Toggle pause dengan ESC
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -168,7 +171,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
         // Skip update jika paused
         if (currentState == State.PAUSED) {
-            hud.stage.act(dt);  // Update UI animations saja
+            hud.stage.act(dt); // Update UI animations saja
             return;
         }
 
@@ -200,7 +203,8 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         Vector2 targetPos = player.getInterpolatedPosition();
         float targetX = targetPos.x + (gamePort.getWorldWidth() / 4);
         float minX = gamePort.getWorldWidth() / 2;
-        if (targetX < minX) targetX = minX;
+        if (targetX < minX)
+            targetX = minX;
 
         // Lerp untuk gerakan kamera yang halus
         float lerpFactor = 0.1f;
@@ -221,10 +225,15 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
             int percentage = hud.getPercentage();
 
             game.backend.syncProgress(userId, levelData.getId(), percentage, 1, 0,
-                new BackendFacade.SyncCallback() {
-                    @Override public void onSuccess(int s, boolean c) {}
-                    @Override public void onFailed(String e) {}
-                });
+                    new BackendFacade.SyncCallback() {
+                        @Override
+                        public void onSuccess(int s, boolean c) {
+                        }
+
+                        @Override
+                        public void onFailed(String e) {
+                        }
+                    });
 
             Gdx.app.log("GAME", "PLAYER MATI!");
         }
@@ -232,7 +241,8 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     @Override
     public void onLevelCompleted() {
-        if (isLevelFinished) return;
+        if (isLevelFinished)
+            return;
         isLevelFinished = true;
 
         // Stop music saat level complete
@@ -242,28 +252,50 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         boolean wasCompletedBefore = levelData.isCompleted();
         int coinsBefore = levelData.getCoinsCollected();
 
+        // LOGIC KHUSUS GUEST MODE (OFFLINE)
+        if (Session.getInstance().isGuest()) {
+            boolean isNewComplete = !wasCompletedBefore;
+            // Jika Guest, simpan progress ke memory Session
+            Session.getInstance().saveLocalProgress(levelData.getId(), currentRunCoins);
+
+            int starsEarned = (isNewComplete) ? levelData.getStars() : 0;
+            int coinsEarned = Math.max(0, currentRunCoins - coinsBefore);
+
+            // Tambahkan ke total Guest
+            Session.getInstance().addStars(starsEarned);
+            Session.getInstance().addCoins(coinsEarned);
+
+            // Update data level objek ini
+            levelData.setCompleted(true);
+            levelData.setCoinsCollected(Math.max(coinsBefore, currentRunCoins));
+
+            showCompletedWindow(starsEarned, coinsEarned);
+            return;
+        }
+
+        // LOGIC STANDARD (ONLINE)
         // Sync 100% ke server dan tampilkan popup
         game.backend.syncProgress(userId, levelData.getId(), 100, 1, currentRunCoins,
-            new BackendFacade.SyncCallback() {
-                @Override
-                public void onSuccess(int serverCoins, boolean serverCompleted) {
-                    // Hitung reward
-                    int starsEarned = (!wasCompletedBefore && serverCompleted) ? levelData.getStars() : 0;
-                    int coinsEarned = Math.max(0, serverCoins - coinsBefore);
+                new BackendFacade.SyncCallback() {
+                    @Override
+                    public void onSuccess(int serverCoins, boolean serverCompleted) {
+                        // Hitung reward
+                        int starsEarned = (!wasCompletedBefore && serverCompleted) ? levelData.getStars() : 0;
+                        int coinsEarned = Math.max(0, serverCoins - coinsBefore);
 
-                    // Update local data
-                    levelData.setCompleted(serverCompleted);
-                    levelData.setCoinsCollected(serverCoins);
+                        // Update local data
+                        levelData.setCompleted(serverCompleted);
+                        levelData.setCoinsCollected(serverCoins);
 
-                    // Tampilkan popup
-                    showCompletedWindow(starsEarned, coinsEarned);
-                }
+                        // Tampilkan popup
+                        showCompletedWindow(starsEarned, coinsEarned);
+                    }
 
-                @Override
-                public void onFailed(String error) {
-                    showCompletedWindow(-1, -1);  // Error state
-                }
-            });
+                    @Override
+                    public void onFailed(String error) {
+                        showCompletedWindow(-1, -1); // Error state
+                    }
+                });
     }
 
     @Override
@@ -275,7 +307,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     private void showCompletedWindow(int starsEarned, int coinsEarned) {
         Skin skin = game.assets.get("uiskin.json", Skin.class);
         LevelCompletedWindow win = new LevelCompletedWindow(
-            game, skin, levelData, starsEarned, coinsEarned, currentRunCoins);
+                game, skin, levelData, starsEarned, coinsEarned, currentRunCoins);
         hud.stage.addActor(win);
         Gdx.input.setInputProcessor(hud.stage);
     }
