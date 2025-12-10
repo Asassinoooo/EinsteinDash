@@ -81,6 +81,15 @@ public class LevelSelectScreen extends ScreenAdapter {
     private void loadLevels() {
         contentTable.add(new Label("Loading levels...", skin)).row();
 
+        // 1. GUEST MODE (OFFLINE)
+        if (Session.getInstance().isGuest()) {
+            Gdx.app.log("LEVEL_SELECT", "Guest Mode: Loading default levels");
+            ArrayList<LevelDto> defaults = com.EinsteinDash.frontend.utils.DefaultLevels.getDefaults();
+            syncProgressAndDisplay(defaults);
+            return;
+        }
+
+        // 2. BACKEND FETCH
         game.backend.fetchLevels(new BackendFacade.LevelListCallback() {
             @Override
             public void onSuccess(ArrayList<LevelDto> levels) {
@@ -97,16 +106,30 @@ public class LevelSelectScreen extends ScreenAdapter {
 
             @Override
             public void onFailed(String errorMessage) {
+                Gdx.app.error("LEVEL_SELECT", "Fetch Failed: " + errorMessage);
+
+                // FALLBACK KE LOCAL LEVELS JIKA SERVER ERROR/OFFLINE
                 contentTable.clear();
-                Label errorLabel = new Label("Error: " + errorMessage, skin);
-                errorLabel.setColor(1, 0, 0, 1);
-                contentTable.add(errorLabel);
+                contentTable.add(new Label("Offline Mode active (" + errorMessage + ")", skin)).padBottom(10).row();
+
+                ArrayList<LevelDto> defaults = com.EinsteinDash.frontend.utils.DefaultLevels.getDefaults();
+                syncProgressAndDisplay(defaults);
             }
         });
     }
 
     /** Sync progress dari database lalu tampilkan levels */
     private void syncProgressAndDisplay(final ArrayList<LevelDto> levels) {
+        // Jika GUEST, tidak perlu fetch progress ke server.
+        // Langsung tampilkan level apa adanya (default: locked/0 stars)
+        // Atau ambil dari Session.localProgress jika ingin fitur "guest progress
+        // sementara"
+        if (Session.getInstance().isGuest()) {
+            contentTable.clear();
+            displayLevels(levels); // Method baru helper
+            return;
+        }
+
         int userId = Session.getInstance().getUserId();
         contentTable.add(new Label("Syncing progress...", skin));
 
@@ -125,33 +148,50 @@ public class LevelSelectScreen extends ScreenAdapter {
                             break;
                         }
                     }
-
-                    // Create button
-                    String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
-                    TextButton levelBtn = new TextButton(btnText, skin);
-                    levelBtn.getLabel().setFontScale(1.2f);
-
-                    if (level.isCompleted()) {
-                        levelBtn.setColor(Color.LIME);
-                    }
-
-                    levelBtn.addListener(new ClickListener() {
-                        @Override
-                        public void clicked(InputEvent event, float x, float y) {
-                            game.setScreen(new PlayScreen(game, level));
-                        }
-                    });
-
-                    contentTable.add(levelBtn).width(600).height(70).pad(10).row();
                 }
+                displayLevels(levels);
             }
 
             @Override
             public void onFailed(String error) {
                 contentTable.clear();
                 contentTable.add(new Label("Failed to sync: " + error, skin));
+                // Tetap tampilkan level meski sync gagal (fallback local progress)
+                displayLevels(levels);
             }
         });
+    }
+
+    /** Helper untuk menampilkan tombol level */
+    private void displayLevels(ArrayList<LevelDto> levels) {
+        for (LevelDto level : levels) {
+            // Cek local progress juga sebagai cadangan
+            if (Session.getInstance().isLevelCompleted(level.getId())) {
+                level.setCompleted(true);
+            }
+            int bestCoins = Session.getInstance().getLevelBestCoins(level.getId());
+            if (bestCoins > level.getCoinsCollected()) {
+                level.setCoinsCollected(bestCoins);
+            }
+
+            // Create button
+            String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
+            TextButton levelBtn = new TextButton(btnText, skin);
+            levelBtn.getLabel().setFontScale(1.2f);
+
+            if (level.isCompleted()) {
+                levelBtn.setColor(Color.LIME);
+            }
+
+            levelBtn.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    game.setScreen(new PlayScreen(game, level));
+                }
+            });
+
+            contentTable.add(levelBtn).width(600).height(70).pad(10).row();
+        }
     }
 
     // ==================== RENDER & DISPOSE ====================
