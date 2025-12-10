@@ -8,9 +8,14 @@ import com.EinsteinDash.frontend.strategies.ShipStrategy;
 import com.EinsteinDash.frontend.strategies.SpiderStrategy;
 import com.EinsteinDash.frontend.strategies.UfoStrategy;
 import com.EinsteinDash.frontend.strategies.WaveStrategy;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -26,7 +31,6 @@ public class Player extends Sprite {
     public Body b2body;
 
     // === MOVEMENT CONFIG ===
-    // === MOVEMENT CONFIG ===
     private static final float MOVEMENT_SPEED = 1.0f; // Unit scalar, actual speed in multiplier
     private static final float JUMP_FORCE = 6.5f; // Kekuatan lompat
 
@@ -37,6 +41,10 @@ public class Player extends Sprite {
     private Vector2 previousPosition = new Vector2();
     private Vector2 interpolatedPosition = new Vector2();
 
+    // === VISUAL EFFECTS ===
+    private com.badlogic.gdx.utils.Array<Vector2> waveTrail;
+    private static final int MAX_TRAIL_LENGTH = 30;
+
     // === TEXTURES (untuk setiap mode) ===
     private Texture cubeTexture;
     private Texture shipTexture;
@@ -44,7 +52,14 @@ public class Player extends Sprite {
     private Texture ufoTexture;
     private Texture waveTexture;
     private Texture robotTexture;
-    private Texture spiderTexture;
+
+    // === SPIDER ANIMATION ===
+    private Texture spiderTexture1;
+    private Texture spiderTexture2;
+    private Texture spiderTexture3;
+    private Animation<TextureRegion> spiderAnimation;
+    private float spiderAnimTimer = 0f;
+    private static final float SPIDER_FRAME_DURATION = 0.1f; // 10 FPS animasi
 
     // === GROUND DETECTION ===
     private int footContacts = 0; // Jumlah objek yang sedang diinjak
@@ -58,6 +73,9 @@ public class Player extends Sprite {
     public Player(World world) {
         this.world = world;
 
+        // Init Effects
+        waveTrail = new com.badlogic.gdx.utils.Array<>();
+
         // Load semua texture
         cubeTexture = new Texture("player_cube.png");
         shipTexture = new Texture("player_ship.png");
@@ -65,12 +83,31 @@ public class Player extends Sprite {
         ufoTexture = new Texture("player_ufo.png");
         waveTexture = new Texture("player_wave.png");
         robotTexture = new Texture("player_robot.png");
-        spiderTexture = new Texture("player_spider.png");
+
+        // Load 3 frame animasi spider
+        spiderTexture1 = new Texture("player_spider1.png");
+        spiderTexture2 = new Texture("player_spider2.png");
+        spiderTexture3 = new Texture("player_spider3.png");
+
+        // Buat Animation dari 3 frame
+        TextureRegion[] spiderFrames = new TextureRegion[] {
+            new TextureRegion(spiderTexture1),
+            new TextureRegion(spiderTexture2),
+            new TextureRegion(spiderTexture3)
+        };
+        spiderAnimation = new Animation<>(SPIDER_FRAME_DURATION, spiderFrames);
+        spiderAnimation.setPlayMode(Animation.PlayMode.LOOP);
 
         // Default: mode Cube
         setRegion(cubeTexture);
-        setBounds(0, 0, 30 / Constants.PPM, 30 / Constants.PPM);
+
+        float defaultSize = 30 / Constants.PPM;
+        setBounds(0, 0, defaultSize, defaultSize);
         setOrigin(getWidth() / 2, getHeight() / 2);
+
+        this.targetWidth = defaultSize;
+        this.targetHeight = defaultSize;
+        this.needsFixtureUpdate = false; // Initial body defined manually below
 
         definePlayer();
         resetInterpolation();
@@ -92,25 +129,56 @@ public class Player extends Sprite {
         // FIX: Reset Flip (Mirroring) agar mode lain tidak ikut terbalik
         setFlip(false, false);
 
-        // REMOVED manual b2body.setGravityScale(1f);
+        // DEFAULT SIZE (SQUARE) for HITBOX
+        float defaultSize = 30 / Constants.PPM;
+
+        // Sprite Dimensions (default to square)
+        float spriteWidth = defaultSize;
+        float spriteHeight = defaultSize;
 
         // Ganti Texture & Setting Khusus
         if (strategy instanceof CubeStrategy) {
             setRegion(cubeTexture);
         } else if (strategy instanceof ShipStrategy) {
             setRegion(shipTexture);
-            // REMOVED hardcoded gravity
+            // Ship Sprite: Pressed Rectangular (1.6x ratio)
+            // Hitbox: Stays Square (defaultSize)
+            spriteWidth = spriteHeight * 1.6f;
         } else if (strategy instanceof BallStrategy) {
             setRegion(ballTexture);
         } else if (strategy instanceof UfoStrategy) {
             setRegion(ufoTexture);
+            // UFO Sprite: Scaled up slightly (1.3x)
+            spriteWidth = defaultSize * 1.3f;
+            spriteHeight = defaultSize * 1.3f;
         } else if (strategy instanceof WaveStrategy) {
             setRegion(waveTexture);
-            // REMOVED hardcoded gravity
         } else if (strategy instanceof RobotStrategy) {
             setRegion(robotTexture);
+            // Robot Sprite: Scaled up slightly (1.25x)
+            spriteWidth = defaultSize * 1.25f;
+            spriteHeight = defaultSize * 1.25f;
         } else if (strategy instanceof SpiderStrategy) {
-            setRegion(spiderTexture);
+            // Reset timer animasi saat masuk mode Spider
+            spiderAnimTimer = 0f;
+            setRegion(spiderAnimation.getKeyFrame(0));
+            // Spider Ratio: 625x368 ~ 1.7
+            spriteWidth = spriteHeight * 1.7f;
+        }
+
+        // Update Sprite Size (Visual Only)
+        setSize(spriteWidth, spriteHeight);
+        setOrigin(spriteWidth / 2, spriteHeight / 2);
+
+        // Queue Physics Update (Force Square Hitbox)
+        // Ensure hitbox is always standard square size
+        if (this.targetWidth != defaultSize || this.targetHeight != defaultSize) {
+             this.targetWidth = defaultSize;
+             this.targetHeight = defaultSize;
+             this.needsFixtureUpdate = true;
+        } else {
+             // If already square, no need to update
+             this.needsFixtureUpdate = false;
         }
 
         // Apply correct gravity based on new strategy and current reverse state
@@ -162,8 +230,60 @@ public class Player extends Sprite {
 
     /** Update logic player setiap frame */
     public void update(float dt) {
+        if (needsFixtureUpdate) {
+            redefineBodyShape();
+            needsFixtureUpdate = false;
+        }
+
         movementStrategy.update(this, dt);
+
+        // --- TRAIL LOGIC ---
+        if (movementStrategy instanceof WaveStrategy) {
+            // Record center position
+            waveTrail.add(new Vector2(getX() + getWidth() / 2, getY() + getHeight() / 2));
+            if (waveTrail.size > MAX_TRAIL_LENGTH) {
+                waveTrail.removeIndex(0);
+            }
+        } else {
+            if (waveTrail.size > 0)
+                waveTrail.clear();
+        }
+
+        // Update animasi spider jika sedang dalam mode Spider
+        // NOTE: Must be before updateVisualRotation because setRegion resets flip state!
+        if (movementStrategy instanceof SpiderStrategy) {
+            spiderAnimTimer += dt;
+            setRegion(spiderAnimation.getKeyFrame(spiderAnimTimer, true));
+        }
+
         updateVisualRotation(dt);
+    }
+
+    // ==================== RENDERING EFFECTS ====================
+
+    public void drawTrail(com.badlogic.gdx.graphics.glutils.ShapeRenderer sr) {
+        if (waveTrail.size < 2) return;
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        // Layer 1: Outer Glow (Cyan/Blue)
+        sr.setColor(0f, 1f, 1f, 0.4f); // Cyan transparent
+        for (int i = 0; i < waveTrail.size - 1; i++) {
+            Vector2 p1 = waveTrail.get(i);
+            Vector2 p2 = waveTrail.get(i+1);
+            sr.rectLine(p1, p2, 8 / Constants.PPM); // Tebal
+        }
+
+        // Layer 2: Inner Core (White)
+        sr.setColor(1f, 1f, 1f, 0.8f);
+        for (int i = 0; i < waveTrail.size - 1; i++) {
+            Vector2 p1 = waveTrail.get(i);
+            Vector2 p2 = waveTrail.get(i+1);
+            sr.rectLine(p1, p2, 3 / Constants.PPM); // Tipis
+        }
+
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     // --- VISUAL ROTATION & FLIP ---
@@ -178,8 +298,10 @@ public class Player extends Sprite {
 
         if (movementStrategy instanceof SpiderStrategy) {
             // Logic khusus Spider digabung dengan Global Gravity
-            boolean isCeiling = b2body.getGravityScale() < 0; // Ini akan konsisten dengan isGravityReversed
+            // User request: Adjust rotation/flip logic
+            boolean isCeiling = b2body.getGravityScale() < 0;
             flipY = isCeiling;
+            flipX = isCeiling; // Flip X too when on ceiling
         }
 
         setFlip(flipX, flipY);
@@ -194,15 +316,15 @@ public class Player extends Sprite {
             }
         } else if (movementStrategy instanceof ShipStrategy) {
             // Ship: Miring sesuai arah vertikal
-            float targetRotation = MathUtils.clamp(velocityY * 3.0f, -45, 45);
+            float targetRotation = MathUtils.clamp(velocityY * 3.0f, -30, 30); // Reduced rotation for ship
             setRotation(MathUtils.lerp(getRotation(), targetRotation, 0.1f));
         } else if (movementStrategy instanceof BallStrategy) {
             float gravity = b2body.getGravityScale();
             float rotationSpeed = 600f;
             if (gravity > 0)
-                rotate(-rotationSpeed * dt);
+                rotate(-rotationSpeed * dt); // Reverted: Ground = Clockwise (Negative)
             else
-                rotate(rotationSpeed * dt);
+                rotate(rotationSpeed * dt); // Reverted: Ceiling = CCW (Positive)
         } else if (movementStrategy instanceof UfoStrategy) {
             float targetRotation = velocityY * 2.0f;
             targetRotation = MathUtils.clamp(targetRotation, -20, 20);
@@ -220,14 +342,8 @@ public class Player extends Sprite {
         }
         // --- LOGIKA FIX SPIDER ---
         else if (movementStrategy instanceof SpiderStrategy) {
-            // Cek apakah gravitasi negatif (sedang di atap/ceiling)
-            boolean isCeiling = b2body.getGravityScale() < 0;
-
-            // Lakukan FLIP Y (Vertikal) jika di atap.
-            // X tetap false agar tidak terbalik kiri-kanan.
-            setFlip(false, isCeiling);
-
-            // Pastikan rotasi 0 agar berdiri tegak
+             // Redundant but keeping consistent
+             // Logic already handled by setFlip above, but this block ensures rotation is 0
             setRotation(0);
         } else {
             setRotation(0);
@@ -252,6 +368,7 @@ public class Player extends Sprite {
 
         b2body = world.createBody(bdef);
 
+        // Initial shape (Box)
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(14 / Constants.PPM, 14 / Constants.PPM);
 
@@ -263,6 +380,40 @@ public class Player extends Sprite {
         b2body.setUserData(this);
         b2body.createFixture(fdef).setUserData("PLAYER");
         shape.dispose();
+    }
+
+    // === DYNAMIC SHAPE HANDLING ===
+    private boolean needsFixtureUpdate = false;
+    private float targetWidth;
+    private float targetHeight;
+
+    /**
+     * Recreates the fixture with new dimensions.
+     * Must be called during update step, NOT during world step.
+     */
+    private void redefineBodyShape() {
+        // Destroy old fixture
+        if (b2body.getFixtureList().size > 0) {
+            b2body.destroyFixture(b2body.getFixtureList().first());
+        }
+
+        // Create new shape
+        PolygonShape shape = new PolygonShape();
+        // Slightly smaller than sprite to allow for padding
+        float hx = (targetWidth / 2) - (1 / Constants.PPM);
+        float hy = (targetHeight / 2) - (1 / Constants.PPM);
+        shape.setAsBox(hx, hy);
+
+        FixtureDef fdef = new FixtureDef();
+        fdef.shape = shape;
+        fdef.friction = 0;
+        fdef.restitution = 0;
+
+        b2body.createFixture(fdef).setUserData("PLAYER");
+        shape.dispose();
+
+        // Update Sprite Origin to Center
+        setOrigin(targetWidth / 2, targetHeight / 2);
     }
 
     @Override
@@ -283,8 +434,12 @@ public class Player extends Sprite {
             waveTexture.dispose();
         if (robotTexture != null)
             robotTexture.dispose();
-        if (spiderTexture != null)
-            spiderTexture.dispose();
+        if (spiderTexture1 != null)
+            spiderTexture1.dispose();
+        if (spiderTexture2 != null)
+            spiderTexture2.dispose();
+        if (spiderTexture3 != null)
+            spiderTexture3.dispose();
     }
 
     public MovementStrategy getStrategy() {
