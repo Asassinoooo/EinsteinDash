@@ -16,6 +16,11 @@ public class Portal implements Pool.Poolable {
 
     private static Texture SHIP_PORTAL_TEXTURE;
     private static Texture CUBE_PORTAL_TEXTURE;
+    private static Texture BALL_PORTAL_TEXTURE;
+    private static Texture UFO_PORTAL_TEXTURE;
+    private static Texture WAVE_PORTAL_TEXTURE;
+    private static Texture ROBOT_PORTAL_TEXTURE;
+    private static Texture SPIDER_PORTAL_TEXTURE;
 
     public Portal() {
         this.active = false;
@@ -26,6 +31,22 @@ public class Portal implements Pool.Poolable {
         if (CUBE_PORTAL_TEXTURE == null) {
             CUBE_PORTAL_TEXTURE = new Texture("portal_cube.png");
         }
+        if (BALL_PORTAL_TEXTURE == null) {
+            BALL_PORTAL_TEXTURE =  new Texture("portal_ball.png");
+        }
+        if  (UFO_PORTAL_TEXTURE == null) {
+            UFO_PORTAL_TEXTURE = new Texture("portal_ufo.png");
+        }
+        if (WAVE_PORTAL_TEXTURE == null) {
+            WAVE_PORTAL_TEXTURE = new Texture("portal_wave.png");
+        }
+        if  (ROBOT_PORTAL_TEXTURE == null) {
+            ROBOT_PORTAL_TEXTURE = new Texture("portal_robot.png");
+        }
+        if (SPIDER_PORTAL_TEXTURE == null) {
+            SPIDER_PORTAL_TEXTURE = new Texture("portal_spider.png");
+        }
+
     }
 
     public void init(World world, float x, float y, String type) {
@@ -35,6 +56,18 @@ public class Portal implements Pool.Poolable {
 
         if ("PORTAL_SHIP".equals(type)) {
             this.texture = SHIP_PORTAL_TEXTURE;
+        } else if ("PORTAL_CUBE".equals(type)) {
+            this.texture = BALL_PORTAL_TEXTURE;
+        } else if ("PORTAL_BALL".equals(type)) {
+            this.texture = BALL_PORTAL_TEXTURE;
+        } else if ("PORTAL_UFO".equals(type)) {
+            this.texture = UFO_PORTAL_TEXTURE;
+        } else if ("PORTAL_WAVE".equals(type)) {
+            this.texture = WAVE_PORTAL_TEXTURE;
+        } else if ("PORTAL_ROBOT".equals(type)) {
+            this.texture = ROBOT_PORTAL_TEXTURE;
+        } else if ("PORTAL_SPIDER".equals(type)) {
+            this.texture  = SPIDER_PORTAL_TEXTURE;
         } else {
             this.texture = CUBE_PORTAL_TEXTURE;
         }
