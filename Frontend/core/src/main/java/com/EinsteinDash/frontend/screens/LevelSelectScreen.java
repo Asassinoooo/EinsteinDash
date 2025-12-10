@@ -1,6 +1,12 @@
 package com.EinsteinDash.frontend.screens;
 
+import java.util.ArrayList;
+
+import com.EinsteinDash.frontend.Main;
+import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.model.ProgressDto;
+import com.EinsteinDash.frontend.network.BackendFacade;
+import com.EinsteinDash.frontend.utils.Constants;
 import com.EinsteinDash.frontend.utils.Session;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -8,19 +14,18 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.EinsteinDash.frontend.Main;
-import com.EinsteinDash.frontend.model.LevelDto;
-import com.EinsteinDash.frontend.network.BackendFacade;
-import com.EinsteinDash.frontend.utils.Constants;
 
-// PENTING: Tambahkan Import PlayScreen
-import com.EinsteinDash.frontend.screens.PlayScreen;
-
-import java.util.ArrayList;
-
+/**
+ * LevelSelectScreen - Menampilkan daftar level yang bisa dipilih.
+ * Sync progress dari database dan tampilkan status completed.
+ */
 public class LevelSelectScreen extends ScreenAdapter {
 
     private final Main game;
@@ -32,14 +37,20 @@ public class LevelSelectScreen extends ScreenAdapter {
         this.game = game;
     }
 
+    // ==================== LIFECYCLE ====================
+
     @Override
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-
-        // Menggunakan AssetManager (Optimasi)
         skin = game.assets.get("uiskin.json", Skin.class);
 
+        setupUI();
+        loadLevels();
+    }
+
+    /** Setup UI layout */
+    private void setupUI() {
         Table mainTable = new Table();
         mainTable.setFillParent(true);
 
@@ -50,23 +61,23 @@ public class LevelSelectScreen extends ScreenAdapter {
         ScrollPane scrollPane = new ScrollPane(contentTable, skin);
 
         TextButton backButton = new TextButton("BACK", skin);
-
-        mainTable.add(titleLabel).pad(20).row();
-        mainTable.add(scrollPane).width(800).height(400).pad(10).row(); // Lebar disesuaikan resolusi baru
-        mainTable.add(backButton).width(200).height(50).pad(20).row();
-
-        stage.addActor(mainTable);
-
-        loadLevels();
-
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new MenuScreen(game));
             }
         });
+
+        mainTable.add(titleLabel).pad(20).row();
+        mainTable.add(scrollPane).width(800).height(400).pad(10).row();
+        mainTable.add(backButton).width(200).height(50).pad(20).row();
+
+        stage.addActor(mainTable);
     }
 
+    // ==================== DATA LOADING ====================
+
+    /** Load levels dan sync dengan progress dari database */
     private void loadLevels() {
         contentTable.add(new Label("Loading levels...", skin)).row();
 
@@ -80,86 +91,70 @@ public class LevelSelectScreen extends ScreenAdapter {
                     return;
                 }
 
-                // --- LANGKAH BARU: AMBIL PROGRESS DARI DATABASE ---
-                int userId = Session.getInstance().getUserId();
-
-                // Tampilkan loading sebentar selagi ambil progress
-                contentTable.add(new Label("Syncing progress...", skin));
-
-                game.backend.fetchUserProgress(userId, new BackendFacade.ProgressListCallback() {
-                    @Override
-                    public void onSuccess(ArrayList<ProgressDto> progressList) {
-                        contentTable.clear(); // Hapus tulisan loading
-
-                        // LOOP UTAMA: MERGE DATA LEVEL + PROGRESS
-                        for (LevelDto level : levels) {
-
-                            // Default: Belum tamat
-                            boolean isSynced = false;
-
-                            // Cari apakah ada data progress untuk level ini di database?
-                            for (ProgressDto prog : progressList) {
-                                if (prog.getLevelId() == level.getId()) {
-                                    // Timpa data level dengan data dari Database
-                                    level.setCompleted(prog.isCompleted());
-                                    level.setCoinsCollected(prog.getCoinsCollected());
-
-                                    // Kita update juga Session lokal biar tetap sinkron
-                                    Session.getInstance().saveLocalProgress(level.getId(), prog.getCoinsCollected());
-
-                                    Gdx.app.log("DB_SYNC", "Level " + level.getId() + " is COMPLETED in DB.");
-                                    isSynced = true;
-                                    break;
-                                }
-                            }
-
-
-                            // Opsional: Tambahkan teks "DONE" jika sudah tamat
-                            String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
-
-                            TextButton levelBtn = new TextButton(btnText,skin);
-                            levelBtn.getLabel().setFontScale(1.2f);
-
-                            if (level.isCompleted()) {
-                                levelBtn.setColor(Color.LIME);
-                            }
-
-                            // Listener tombol
-                            levelBtn.addListener(new ClickListener() {
-                                @Override
-                                public void clicked(InputEvent event, float x, float y) {
-                                    Gdx.app.log("LEVEL", "Selected: " + level.getLevelName());
-
-                                    // PENTING: Object 'level' yang dibawa ke PlayScreen ini
-                                    // SUDAH berisi data isCompleted=true dari database.
-                                    // Jadi logika "wasCompletedBefore" di PlayScreen akan valid.
-                                    game.setScreen(new PlayScreen(game, level));
-                                }
-                            });
-
-                            contentTable.add(levelBtn).width(600).height(70).pad(10).row();
-                        }
-                    }
-
-                    @Override
-                    public void onFailed(String error) {
-                        contentTable.clear();
-                        // Jika gagal ambil progress, tetap tampilkan level tapi progress kosong
-                        // Atau tampilkan error
-                        contentTable.add(new Label("Failed to sync progress: " + error, skin));
-                    }
-                });
+                // Sync dengan progress user
+                syncProgressAndDisplay(levels);
             }
 
             @Override
             public void onFailed(String errorMessage) {
                 contentTable.clear();
-                Label errorLabel = new Label("Error fetching levels: " + errorMessage, skin);
+                Label errorLabel = new Label("Error: " + errorMessage, skin);
                 errorLabel.setColor(1, 0, 0, 1);
                 contentTable.add(errorLabel);
             }
         });
     }
+
+    /** Sync progress dari database lalu tampilkan levels */
+    private void syncProgressAndDisplay(final ArrayList<LevelDto> levels) {
+        int userId = Session.getInstance().getUserId();
+        contentTable.add(new Label("Syncing progress...", skin));
+
+        game.backend.fetchUserProgress(userId, new BackendFacade.ProgressListCallback() {
+            @Override
+            public void onSuccess(ArrayList<ProgressDto> progressList) {
+                contentTable.clear();
+
+                // Merge progress dengan level data
+                for (LevelDto level : levels) {
+                    for (ProgressDto prog : progressList) {
+                        if (prog.getLevelId() == level.getId()) {
+                            level.setCompleted(prog.isCompleted());
+                            level.setCoinsCollected(prog.getCoinsCollected());
+                            Session.getInstance().saveLocalProgress(level.getId(), prog.getCoinsCollected());
+                            break;
+                        }
+                    }
+
+                    // Create button
+                    String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
+                    TextButton levelBtn = new TextButton(btnText, skin);
+                    levelBtn.getLabel().setFontScale(1.2f);
+
+                    if (level.isCompleted()) {
+                        levelBtn.setColor(Color.LIME);
+                    }
+
+                    levelBtn.addListener(new ClickListener() {
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            game.setScreen(new PlayScreen(game, level));
+                        }
+                    });
+
+                    contentTable.add(levelBtn).width(600).height(70).pad(10).row();
+                }
+            }
+
+            @Override
+            public void onFailed(String error) {
+                contentTable.clear();
+                contentTable.add(new Label("Failed to sync: " + error, skin));
+            }
+        });
+    }
+
+    // ==================== RENDER & DISPOSE ====================
 
     @Override
     public void render(float delta) {
@@ -177,6 +172,5 @@ public class LevelSelectScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
-        // skin jangan didispose di sini karena milik Main
     }
 }

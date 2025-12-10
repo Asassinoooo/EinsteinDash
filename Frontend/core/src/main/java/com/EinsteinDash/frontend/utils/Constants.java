@@ -1,14 +1,21 @@
 package com.EinsteinDash.frontend.utils;
 
+/**
+ * Constants - Konfigurasi global untuk game.
+ */
 public class Constants {
-    // PPM = Pixels Per Meter
-    // 1 Meter di dunia Box2D = 100 Piksel di Layar
+
+    // === PHYSICS ===
+    /** Pixels Per Meter - Konversi antara dunia Box2D dan layar */
     public static final float PPM = 100;
 
-    // Ukuran Layar Virtual (Viewport)
+    // === VIEWPORT ===
+    /** Lebar layar virtual (dalam pixel) */
     public static final int V_WIDTH = 1280;
+    /** Tinggi layar virtual (dalam pixel) */
     public static final int V_HEIGHT = 720;
 
-    // Backend URL
+    // === NETWORK ===
+    /** Base URL untuk REST API backend */
     public static final String BASE_URL = "http://localhost:8081/api";
 }

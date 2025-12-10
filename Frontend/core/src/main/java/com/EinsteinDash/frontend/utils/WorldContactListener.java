@@ -1,12 +1,29 @@
 package com.EinsteinDash.frontend.utils;
 
-import com.EinsteinDash.frontend.objects.Coin;
-import com.EinsteinDash.frontend.objects.Portal;
-import com.EinsteinDash.frontend.strategies.*;
-import com.badlogic.gdx.physics.box2d.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.EinsteinDash.frontend.objects.Coin;
+import com.EinsteinDash.frontend.objects.Portal;
+import com.EinsteinDash.frontend.strategies.BallStrategy;
+import com.EinsteinDash.frontend.strategies.CubeStrategy;
+import com.EinsteinDash.frontend.strategies.MovementStrategy;
+import com.EinsteinDash.frontend.strategies.RobotStrategy;
+import com.EinsteinDash.frontend.strategies.ShipStrategy;
+import com.EinsteinDash.frontend.strategies.SpiderStrategy;
+import com.EinsteinDash.frontend.strategies.UfoStrategy;
+import com.EinsteinDash.frontend.strategies.WaveStrategy;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Manifold;
+
+/**
+ * WorldContactListener - Menangani collision detection Box2D.
+ * Menentukan aksi berdasarkan tipe objek yang bertabrakan.
+ */
 public class WorldContactListener implements ContactListener {
 
     private List<GameObserver> observers = new ArrayList<>();
@@ -15,183 +32,189 @@ public class WorldContactListener implements ContactListener {
         observers.add(observer);
     }
 
+    // ==================== BEGIN CONTACT ====================
+
     @Override
     public void beginContact(Contact contact) {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
 
-        if (isPlayer(fixA) || isPlayer(fixB)) {
-            Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
-            Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
+        if (!isPlayer(fixA) && !isPlayer(fixB)) return;
 
-            Object playerBodyData = playerFix.getBody().getUserData();
-            Object otherBodyData = otherFix.getBody().getUserData();
-            Object otherFixtureData = otherFix.getUserData();
+        // Identifikasi fixture player vs other
+        Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
+        Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
 
-            // 1. OBJECTS (Portal & Coin)
-            if (otherBodyData instanceof Portal) {
-                Portal portal = (Portal) otherBodyData;
-                if (playerBodyData instanceof Player) {
-                    Player player = (Player) playerBodyData;
-                    if ("PORTAL_SHIP".equals(portal.getType())) {
-                        player.setStrategy(new ShipStrategy());
-                    } else if ("PORTAL_CUBE".equals(portal.getType())) {
-                        player.setStrategy(new CubeStrategy());
-                    } else if ("PORTAL_BALL".equals(portal.getType())) {
-                        player.setStrategy(new BallStrategy());
-                    } else if ("PORTAL_UFO".equals(portal.getType())) {
-                        player.setStrategy(new UfoStrategy());
-                    } else if ("PORTAL_WAVE".equals(portal.getType())) {
-                        player.setStrategy(new WaveStrategy());
-                    } else if ("PORTAL_ROBOT".equals(portal.getType())) {
-                        player.setStrategy(new RobotStrategy());
-                    } else if ("PORTAL_SPIDER".equals(portal.getType())) {
-                        player.setStrategy(new SpiderStrategy());
-                    }
-                }
-            }
-            else if (otherBodyData instanceof Coin) {
-                Coin coin = (Coin) otherBodyData;
-                if (!coin.isCollected()) {
-                    coin.collect();
-                    for(GameObserver o : observers) o.onCoinCollected();
-                }
-            }
+        Object playerData = playerFix.getBody().getUserData();
+        Object otherBodyData = otherFix.getBody().getUserData();
+        Object otherFixtureData = otherFix.getUserData();
 
-            // 2. BLOCKS & GROUND (Logic Deteksi Tanah & Mati)
-            else if (otherFixtureData != null) {
-                String type = otherFixtureData.toString();
+        // Handle Portal collision
+        if (otherBodyData instanceof Portal) {
+            handlePortalContact((Portal) otherBodyData, playerData);
+            return;
+        }
 
-                if (type.equals("SPIKE")) {
-                    notifyPlayerDied();
-                }
-                else if (type.equals("BLOCK") || type.equals("FLOOR") || type.equals("CEILING")) {
-                    // Logic Deteksi Tabrakan
-                    // Apakah ini lantai (aman) atau tembok (mati)?
+        // Handle Coin collision
+        if (otherBodyData instanceof Coin) {
+            handleCoinContact((Coin) otherBodyData);
+            return;
+        }
 
-                    boolean isSafeLanding = true;
-
-                    if (type.equals("BLOCK") || type.equals("FLOOR")) {
-                        if (playerBodyData instanceof Player) {
-                            Player player = (Player) playerBodyData;
-                            if (player.getMovementStrategy() instanceof RobotStrategy) {
-                                RobotStrategy robotStrategy = ((RobotStrategy) player.getMovementStrategy());
-                                robotStrategy.setJumpTimer(0f);
-                            }
-                        }
-                    }
-
-                    if (type.equals("BLOCK")) {
-                        // Pastikan data yang kita pegang adalah Player
-                        if (playerBodyData instanceof Player) {
-                            Player player = (Player) playerBodyData;
-
-                            // --- MODIFIKASI: HANYA CEK DINDING JIKA MODE CUBE ---
-                            if (player.getMovementStrategy() instanceof CubeStrategy || player.getMovementStrategy() instanceof RobotStrategy) {
-
-                                Body playerBody = playerFix.getBody();
-                                Body blockBody = otherFix.getBody();
-
-                                float playerBottom = playerBody.getPosition().y - (15 / Constants.PPM);
-                                float blockTop = blockBody.getPosition().y + (16 / Constants.PPM);
-                                float tolerance = 0.05f;
-
-                                // Jika kaki player DI BAWAH permukaan balok, berarti nabrak samping/bawah
-                                if (playerBottom < blockTop - tolerance) {
-                                    isSafeLanding = false;
-                                    System.out.println("CRASHED WALL (Cube Mode)!");
-                                    notifyPlayerDied();
-                                }
-                            }
-                            else if (player.getMovementStrategy() instanceof WaveStrategy) {
-                                notifyPlayerDied();
-                                return; // Stop logic
-
-                                // Jika FLOOR (tanah dasar/langit batas world), wave mati juga biasanya
-                                // Tapi kalau FLOOR itu batas level aman, biarkan.
-                                // Asumsi: BLOCK = Obstacle, FLOOR = Safe Border.
-                                // Jika Anda ingin Wave mati kena lantai dasar juga, uncomment notifyPlayerDied di bawah.
-                                // notifyPlayerDied();
-                            }
-                            else if (player.getMovementStrategy() instanceof BallStrategy ||
-                                player.getMovementStrategy() instanceof ShipStrategy ||
-                                player.getMovementStrategy() instanceof SpiderStrategy ||
-                                player.getMovementStrategy() instanceof UfoStrategy) {
-                                if (checkSideCollision(playerFix.getBody(), otherFix.getBody())) {
-                                    System.out.println("CRASH SIDE! (Mode: " + player.getMovementStrategy().getClass().getSimpleName() + ")");
-                                    notifyPlayerDied();
-                                } else {
-                                    // Jika tidak mati (berarti kena atas/bawah), tambahkan kontak kaki
-                                    player.addFootContact();
-                                }
-                            }
-                        }
-
-
-                    }
-
-
-
-                    // Jika Aman (Mendarat di atas), tambahkan sensor kaki
-                    if (isSafeLanding && playerBodyData instanceof Player) {
-                        ((Player) playerBodyData).addFootContact();
-                    }
-                }
-                else if (type.equals("GOAL")) {
-                    notifyLevelCompleted();
-                }
-            }
+        // Handle environment collision (Block, Floor, Ceiling, Spike, Goal)
+        if (otherFixtureData != null) {
+            handleEnvironmentContact(otherFixtureData.toString(), playerFix, otherFix, playerData);
         }
     }
+
+    // ==================== CONTACT HANDLERS ====================
+
+    /** Handle portal: ubah mode player */
+    private void handlePortalContact(Portal portal, Object playerData) {
+        if (!(playerData instanceof Player)) return;
+        Player player = (Player) playerData;
+
+        switch (portal.getType()) {
+            case "PORTAL_CUBE":   player.setStrategy(new CubeStrategy()); break;
+            case "PORTAL_SHIP":   player.setStrategy(new ShipStrategy()); break;
+            case "PORTAL_BALL":   player.setStrategy(new BallStrategy()); break;
+            case "PORTAL_UFO":    player.setStrategy(new UfoStrategy()); break;
+            case "PORTAL_WAVE":   player.setStrategy(new WaveStrategy()); break;
+            case "PORTAL_ROBOT":  player.setStrategy(new RobotStrategy()); break;
+            case "PORTAL_SPIDER": player.setStrategy(new SpiderStrategy()); break;
+        }
+    }
+
+    /** Handle coin: collect dan notify observer */
+    private void handleCoinContact(Coin coin) {
+        if (!coin.isCollected()) {
+            coin.collect();
+            for (GameObserver o : observers) o.onCoinCollected();
+        }
+    }
+
+    /** Handle environment collision */
+    private void handleEnvironmentContact(String type, Fixture playerFix, Fixture otherFix, Object playerData) {
+        switch (type) {
+            case "SPIKE":
+                notifyPlayerDied();
+                break;
+
+            case "GOAL":
+                notifyLevelCompleted();
+                break;
+
+            case "BLOCK":
+            case "FLOOR":
+            case "CEILING":
+                handleSolidContact(type, playerFix, otherFix, playerData);
+                break;
+        }
+    }
+
+    /** Handle contact dengan benda padat (Block/Floor/Ceiling) */
+    private void handleSolidContact(String type, Fixture playerFix, Fixture otherFix, Object playerData) {
+        if (!(playerData instanceof Player)) return;
+        Player player = (Player) playerData;
+        MovementStrategy strategy = player.getMovementStrategy();
+
+        // Reset jump timer untuk Robot saat menyentuh tanah
+        if ((type.equals("BLOCK") || type.equals("FLOOR")) && strategy instanceof RobotStrategy) {
+            ((RobotStrategy) strategy).setJumpTimer(0f);
+        }
+
+        // Collision detection untuk Block
+        if (type.equals("BLOCK")) {
+            if (strategy instanceof CubeStrategy || strategy instanceof RobotStrategy) {
+                if (checkWallCollision(playerFix.getBody(), otherFix.getBody())) {
+                    notifyPlayerDied();
+                    return;
+                }
+            }
+            else if (strategy instanceof WaveStrategy) {
+                notifyPlayerDied();
+                return;
+            }
+            else if (strategy instanceof BallStrategy || strategy instanceof ShipStrategy ||
+                     strategy instanceof SpiderStrategy || strategy instanceof UfoStrategy) {
+                if (checkSideCollision(playerFix.getBody(), otherFix.getBody())) {
+                    notifyPlayerDied();
+                    return;
+                }
+                player.addFootContact();
+                return;
+            }
+        }
+
+        // Safe landing
+        player.addFootContact();
+    }
+
+    // ==================== END CONTACT ====================
 
     @Override
     public void endContact(Contact contact) {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
 
-        if (isPlayer(fixA) || isPlayer(fixB)) {
-            Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
-            Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
+        if (!isPlayer(fixA) && !isPlayer(fixB)) return;
 
-            Object playerBodyData = playerFix.getBody().getUserData();
-            Object otherFixtureData = otherFix.getUserData();
+        Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
+        Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
 
-            // Saat meninggalkan tanah/blok, kurangi sensor kaki
-            if (playerBodyData instanceof Player && otherFixtureData != null) {
-                String type = otherFixtureData.toString();
-                if (type.equals("BLOCK") || type.equals("FLOOR") || type.equals("CEILING")) {
-                    ((Player) playerBodyData).removeFootContact();
-                }
+        Object playerData = playerFix.getBody().getUserData();
+        Object otherFixtureData = otherFix.getUserData();
+
+        // Kurangi foot contact saat meninggalkan permukaan
+        if (playerData instanceof Player && otherFixtureData != null) {
+            String type = otherFixtureData.toString();
+            if (type.equals("BLOCK") || type.equals("FLOOR") || type.equals("CEILING")) {
+                ((Player) playerData).removeFootContact();
             }
         }
     }
 
-    private boolean isPlayer(Fixture fix) {
-        return fix.getUserData() != null && fix.getUserData().equals("PLAYER");
+    // ==================== COLLISION HELPERS ====================
+
+    /** Cek apakah player menabrak dinding (bukan mendarat di atas) */
+    private boolean checkWallCollision(Body playerBody, Body blockBody) {
+        float playerBottom = playerBody.getPosition().y - (15 / Constants.PPM);
+        float blockTop = blockBody.getPosition().y + (16 / Constants.PPM);
+        float tolerance = 0.05f;
+
+        return playerBottom < blockTop - tolerance;
     }
-    private void notifyPlayerDied() { for (GameObserver o : observers) o.onPlayerDied(); }
-    private void notifyLevelCompleted() { for (GameObserver o : observers) o.onLevelCompleted(); }
-    @Override public void preSolve(Contact contact, Manifold oldManifold) {}
-    @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 
+    /** Cek tabrakan samping (untuk mode Ball/Ship/UFO/Spider) */
     private boolean checkSideCollision(Body playerBody, Body blockBody) {
-        float tolerance = 0.05f; // Toleransi kecil
+        float tolerance = 0.05f;
 
-        // Hitung batas vertikal
         float playerBottom = playerBody.getPosition().y - (14 / Constants.PPM);
         float playerTop = playerBody.getPosition().y + (14 / Constants.PPM);
-
         float blockBottom = blockBody.getPosition().y - (16 / Constants.PPM);
         float blockTop = blockBody.getPosition().y + (16 / Constants.PPM);
 
-        // LOGIKA SAMPING:
-        // Tabrakan dianggap samping jika posisi vertikal player berada "di dalam" rentang tinggi blok.
-        // Artinya: Kaki player di bawah atap blok DAN Kepala player di atas lantai blok.
-
+        // Side collision: player berada di antara top dan bottom block
         boolean isBelowTop = playerBottom < (blockTop - tolerance);
         boolean isAboveBottom = playerTop > (blockBottom + tolerance);
 
-        // Jika kita berada di antara atas dan bawah blok, berarti kita menabrak "daging" blok (samping)
         return isBelowTop && isAboveBottom;
     }
+
+    // ==================== UTILITIES ====================
+
+    private boolean isPlayer(Fixture fix) {
+        return fix.getUserData() != null && fix.getUserData().equals("PLAYER");
+    }
+
+    private void notifyPlayerDied() {
+        for (GameObserver o : observers) o.onPlayerDied();
+    }
+
+    private void notifyLevelCompleted() {
+        for (GameObserver o : observers) o.onLevelCompleted();
+    }
+
+    @Override public void preSolve(Contact contact, Manifold oldManifold) {}
+    @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
 }

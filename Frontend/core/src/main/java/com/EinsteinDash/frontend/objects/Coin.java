@@ -1,19 +1,32 @@
 package com.EinsteinDash.frontend.objects;
 
+import com.EinsteinDash.frontend.utils.Constants;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Pool;
-import com.EinsteinDash.frontend.utils.Constants;
 
+/**
+ * Coin - Collectible yang bisa diambil player.
+ * Saat diambil, coin dihapus dari game dan menambah skor.
+ */
 public class Coin implements Pool.Poolable {
+
+    // === PHYSICS ===
     public Body body;
     private World world;
-    private Texture texture;
-    private boolean active;     //  Koin sedang ada di layar
-    private boolean isCollected; // Koin sudah diambil player
 
+    // === STATE ===
+    private Texture texture;
+    private boolean active;
+    private boolean isCollected;
     private static Texture COIN_TEXTURE;
+
+    // ==================== CONSTRUCTOR ====================
 
     public Coin() {
         this.active = false;
@@ -23,6 +36,8 @@ public class Coin implements Pool.Poolable {
         }
         this.texture = COIN_TEXTURE;
     }
+
+    // ==================== INITIALIZATION ====================
 
     public void init(World world, float x, float y) {
         this.world = world;
@@ -38,36 +53,41 @@ public class Coin implements Pool.Poolable {
         body = world.createBody(bdef);
 
         CircleShape shape = new CircleShape();
-        // Ukuran radius 10 pixel (total diameter 20px)
         shape.setRadius(10 / Constants.PPM);
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
-        fdef.isSensor = true;
+        fdef.isSensor = true;  // Sensor = bisa dilewati
 
-        // Labeling untuk deteksi
         body.createFixture(fdef).setUserData("COIN");
-        body.setUserData(this);
+        body.setUserData(this);  // Simpan referensi ke object ini
 
         shape.dispose();
     }
 
+    // ==================== COLLECTION ====================
+
+    /** Tandai coin sebagai sudah diambil */
     public void collect() {
         isCollected = true;
         active = false;
     }
 
+    public boolean isCollected() { return isCollected; }
+
+    // ==================== RENDERING ====================
+
     public void draw(SpriteBatch batch) {
-        // Jangan gambar jika sudah diambil atau tidak aktif
         if (!active || isCollected) return;
 
-        float size = 24 / Constants.PPM; // Ukuran visual
-
+        float size = 24 / Constants.PPM;
         batch.draw(texture,
-            body.getPosition().x - size/2,
-            body.getPosition().y - size/2,
+            body.getPosition().x - size / 2,
+            body.getPosition().y - size / 2,
             size, size);
     }
+
+    // ==================== POOL RESET ====================
 
     @Override
     public void reset() {
@@ -77,10 +97,5 @@ public class Coin implements Pool.Poolable {
         }
         this.active = false;
         this.isCollected = false;
-    }
-
-    // Getter untuk mengecek status
-    public boolean isCollected() {
-        return isCollected;
     }
 }

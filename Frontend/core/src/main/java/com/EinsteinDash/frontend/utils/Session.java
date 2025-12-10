@@ -2,21 +2,17 @@ package com.EinsteinDash.frontend.utils;
 
 import java.util.HashMap;
 
+/**
+ * Session - Menyimpan data user yang sedang login (Singleton Pattern).
+ * Data ini tersedia di seluruh aplikasi selama runtime.
+ */
 public class Session {
-    // Instance tunggal (Singleton)
+
+    // === SINGLETON ===
     private static Session instance;
 
-    // Data User
-    private int userId;
-    private String username;
-    private int totalStars;
-    private boolean isLoggedIn = false;
-    private HashMap<Integer, Integer> localProgress = new HashMap<>();
+    private Session() {} // Private constructor
 
-    // Constructor Private
-    private Session() {}
-
-    // Method untuk akses instance
     public static Session getInstance() {
         if (instance == null) {
             instance = new Session();
@@ -24,6 +20,20 @@ public class Session {
         return instance;
     }
 
+    // === USER DATA ===
+    private int userId;
+    private String username;
+    private int totalStars;
+    private boolean isLoggedIn = false;
+
+    // Cache progress level (levelId -> coins)
+    private HashMap<Integer, Integer> localProgress = new HashMap<>();
+
+    // ==================== SETTERS ====================
+
+    /**
+     * Simpan data user setelah login berhasil.
+     */
     public void setUserData(int id, String username, int stars) {
         this.userId = id;
         this.username = username;
@@ -31,28 +41,31 @@ public class Session {
         this.isLoggedIn = true;
     }
 
-    // Menyimpan progress ke memori
+    /**
+     * Simpan progress level ke cache lokal.
+     * Hanya update jika coins lebih tinggi dari sebelumnya.
+     */
     public void saveLocalProgress(int levelId, int coins) {
-        // Hanya simpan jika lebih besar dari yang sudah ada
         int currentBest = localProgress.getOrDefault(levelId, -1);
         if (coins > currentBest) {
             localProgress.put(levelId, coins);
         }
     }
 
-    // Cek apakah level sudah completed
-    public boolean isLevelCompleted(int levelId) {
-        return localProgress.containsKey(levelId);
-    }
+    // ==================== GETTERS ====================
 
-    // Ambil koin terbaik
-    public int getLevelBestCoins(int levelId) {
-        return localProgress.getOrDefault(levelId, 0);
-    }
-
-    // Getters
     public int getUserId() { return userId; }
     public String getUsername() { return username; }
     public int getTotalStars() { return totalStars; }
     public boolean isLoggedIn() { return isLoggedIn; }
+
+    /** Cek apakah level sudah pernah diselesaikan */
+    public boolean isLevelCompleted(int levelId) {
+        return localProgress.containsKey(levelId);
+    }
+
+    /** Ambil jumlah koin terbaik untuk level tertentu */
+    public int getLevelBestCoins(int levelId) {
+        return localProgress.getOrDefault(levelId, 0);
+    }
 }
