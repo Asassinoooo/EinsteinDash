@@ -1,10 +1,14 @@
 package com.EinsteinDash.frontend.strategies;
 
+import com.EinsteinDash.frontend.utils.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.math.Vector2;
-import com.EinsteinDash.frontend.utils.Player;
 
+/**
+ * WaveStrategy - Mode gelombang dengan gerakan diagonal.
+ * Tahan tombol = naik diagonal, lepas = turun diagonal.
+ * Tidak ada gravitasi - gerakan murni berdasarkan input.
+ */
 public class WaveStrategy implements MovementStrategy {
 
     // Kecepatan Vertikal Wave
@@ -14,30 +18,22 @@ public class WaveStrategy implements MovementStrategy {
 
     @Override
     public void update(Player player, float dt) {
-        // 1. Matikan Gravitasi (Wave bergerak murni berdasarkan input velocity)
+        // Matikan gravitasi (Wave bergerak murni manual)
         player.b2body.setGravityScale(0f);
 
-        // 2. Tentukan Arah Berdasarkan Input (Tahan = Naik, Lepas = Turun)
+        // Tentukan arah berdasarkan input
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
             Gdx.input.isKeyPressed(Input.Keys.UP) ||
             Gdx.input.isTouched();
 
-        float targetVelocityY;
+        float targetVelocityY = isHolding ? WAVE_SPEED : -WAVE_SPEED;
 
-        if (isHolding) {
-            targetVelocityY = WAVE_SPEED;  // Naik
-        } else {
-            targetVelocityY = -WAVE_SPEED; // Turun
-        }
-
-        // 3. Set Linear Velocity Secara Langsung
-        // Pertahankan kecepatan X (auto-run), ubah kecepatan Y instan
+        // Set velocity langsung (bukan force) untuk kontrol presisi
         player.b2body.setLinearVelocity(player.getMovementSpeed(), targetVelocityY);
     }
 
     @Override
     public void handleInput(Player player) {
-        // Input Continuous ditangani di method update() agar responsif (instant turn).
-        // Tidak perlu logic 'Just Pressed' di sini.
+        // Input ditangani di update() untuk responsivitas instan
     }
 }

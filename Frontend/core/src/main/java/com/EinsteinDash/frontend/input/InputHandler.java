@@ -1,32 +1,32 @@
 package com.EinsteinDash.frontend.input;
 
+import com.EinsteinDash.frontend.utils.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.EinsteinDash.frontend.utils.Player;
 
+/**
+ * InputHandler - Menangani input dari keyboard/touch dan meneruskan ke Player.
+ * Pattern: Command - memisahkan input detection dari action execution.
+ */
 public class InputHandler {
+
     private Command jumpCommand;
 
     public InputHandler() {
         jumpCommand = new JumpCommand();
     }
 
+    /**
+     * Cek input dan eksekusi command yang sesuai.
+     * Dipanggil setiap frame dari PlayScreen.update().
+     */
     public void handleInput(Player player) {
-        // Cek apakah tombol Spasi / Mouse SEDANG DITEKAN (Continuous)
+        // Cek apakah tombol sedang ditekan (continuous untuk Ship/Wave)
         boolean isPressed = Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isTouched();
 
-        // Cek apakah BARU SAJA ditekan (One shot)
-        boolean isJustPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.justTouched();
-
-        // KITA KIRIM SINYAL KE PLAYER
-        // Tapi Player tidak tahu dia sedang mode apa.
-        // Jadi kita panggil jump() terus menerus jika ditekan.
-        // Biar Strategy yang memutuskan:
-        // - CubeStrategy: Cek velocity Y (kalau di udara, abaikan perintah jump ini).
-        // - ShipStrategy: Terima perintah jump ini sebagai "Gas".
-
+        // Kirim ke player setiap frame saat ditekan
+        // MovementStrategy yang menentukan aksi berdasarkan mode
         if (isPressed) {
-            // Kita kirim perintah execute terus menerus selama tombol ditekan
             jumpCommand.execute(player);
         }
     }

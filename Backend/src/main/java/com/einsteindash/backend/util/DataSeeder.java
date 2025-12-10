@@ -69,7 +69,7 @@ public class DataSeeder {
                         ]
                 """);
                 l1.setStars(1); // Easy
-                l1.setAudioTrackId(101);
+                l1.setAudioTrackId(1001);
                 repository.save(l1);
 
                 Level l2 = repository.findByLevelName("Back on Track").orElse(new Level());

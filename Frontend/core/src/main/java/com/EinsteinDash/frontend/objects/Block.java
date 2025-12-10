@@ -1,36 +1,50 @@
 package com.EinsteinDash.frontend.objects;
 
+import com.EinsteinDash.frontend.utils.Constants;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Pool;
-import com.EinsteinDash.frontend.utils.Constants;
 
+/**
+ * Block - Platform solid yang bisa diinjak player.
+ * Menggunakan Object Pool untuk optimasi memori.
+ */
 public class Block implements Pool.Poolable {
+
+    // === PHYSICS ===
     public Body body;
     private World world;
+
+    // === RENDERING ===
     private Texture texture;
     private boolean active;
+    private static Texture BLOCK_TEXTURE;  // Shared texture (hemat memori)
 
-    // Texture static
-    private static Texture BLOCK_TEXTURE;
+    // ==================== CONSTRUCTOR ====================
 
     public Block() {
         this.active = false;
-        // Load gambar jika belum ada
         if (BLOCK_TEXTURE == null) {
             BLOCK_TEXTURE = new Texture("block.png");
         }
         this.texture = BLOCK_TEXTURE;
     }
 
-    // Reuse object
+    // ==================== INITIALIZATION ====================
+
+    /** Inisialisasi block dari pool dengan posisi tertentu */
     public void init(World world, float x, float y) {
         this.world = world;
         this.active = true;
         defineBody(x, y);
     }
 
+    /** Buat Box2D body */
     private void defineBody(float x, float y) {
         BodyDef bdef = new BodyDef();
         bdef.position.set((x * 32 + 16) / Constants.PPM, (y * 32 + 16) / Constants.PPM);
@@ -42,28 +56,28 @@ public class Block implements Pool.Poolable {
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
-
         body.createFixture(fdef).setUserData("BLOCK");
         body.setUserData("BLOCK");
 
         shape.dispose();
     }
 
+    // ==================== RENDERING ====================
+
     public void draw(SpriteBatch batch) {
         if (!active) return;
 
-        float size = (32 / Constants.PPM);
-        float visualSize = size * 1f;
-
+        float size = 32 / Constants.PPM;
         batch.draw(texture,
-            body.getPosition().x - visualSize/2,
-            body.getPosition().y - visualSize/2,
-            visualSize, visualSize);
+            body.getPosition().x - size / 2,
+            body.getPosition().y - size / 2,
+            size, size);
     }
+
+    // ==================== POOL RESET ====================
 
     @Override
     public void reset() {
-        // Reset body saat dikembalikan ke pool
         if (body != null) {
             world.destroyBody(body);
             body = null;

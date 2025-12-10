@@ -1,56 +1,67 @@
 package com.EinsteinDash.frontend;
 
+import com.EinsteinDash.frontend.audio.AudioManager;
+import com.EinsteinDash.frontend.network.BackendFacade;
+import com.EinsteinDash.frontend.screens.LoginScreen;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.SkinLoader;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.EinsteinDash.frontend.network.BackendFacade;
-import com.EinsteinDash.frontend.screens.LoginScreen;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
-// Design Pattern: Singleton (Secara konsep, class Game ini hanya ada 1 instance)
+/**
+ * Main - Entry point game EinsteinDash.
+ */
 public class Main extends Game {
-    // SpriteBatch digunakan oleh semua screen (Hemat Memori)
-    public SpriteBatch batch;
 
-    // AssetManager untuk memuat gambar/suara terpusat
-    public AssetManager assets;
+    // === SHARED RESOURCES ===
+    public SpriteBatch batch;       // Renderer untuk semua screen
+    public AssetManager assets;     // Manager untuk load/unload asset
+    public BackendFacade backend;   // Facade komunikasi ke REST API
 
-    // Facade untuk komunikasi ke Backend
-    public BackendFacade backend;
-    private float musicVolume;
+    // === MANAGERS ===
+    private AudioManager audioManager;  // Manager untuk audio/music
+
+    // ==================== LIFECYCLE ====================
 
     @Override
     public void create() {
+        // Inisialisasi shared resources
         batch = new SpriteBatch();
         assets = new AssetManager();
         backend = new BackendFacade();
 
+        // Inisialisasi managers
+        audioManager = new AudioManager();
+        audioManager.loadAllTracks();
+
+        // Load UI skin
         assets.load("uiskin.json", Skin.class, new SkinLoader.SkinParameter("uiskin.atlas"));
         assets.finishLoading();
 
-        // Set layar awal ke LoginScreen
+        // Tampilkan layar login sebagai starting screen
         this.setScreen(new LoginScreen(this));
-    }
-
-    // Di class Main.java
-    public float getMusicVolume() {
-        return this.musicVolume;
-    }
-
-    public void setMusicVolume(float vol) {
-        this.musicVolume = vol;
-        // logic update volume music jika ada yang sedang play
     }
 
     @Override
     public void render() {
-        super.render();
+        super.render();  // Delegasi ke screen aktif
     }
 
     @Override
     public void dispose() {
         batch.dispose();
         assets.dispose();
+        audioManager.dispose();
+    }
+
+    // ==================== GETTERS ====================
+
+    /**
+     * Get AudioManager untuk kontrol music dan sound effects.
+     * @return AudioManager instance
+     */
+    public AudioManager getAudioManager() {
+        return audioManager;
     }
 }

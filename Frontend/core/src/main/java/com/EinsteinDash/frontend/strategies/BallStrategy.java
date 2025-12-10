@@ -1,10 +1,14 @@
 package com.EinsteinDash.frontend.strategies;
 
+import com.EinsteinDash.frontend.utils.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
-import com.EinsteinDash.frontend.utils.Player;
 
+/**
+ * BallStrategy - Mode bola yang dapat flip gravitasi.
+ * Tap saat di permukaan untuk membalik gravitasi (lantai <-> langit-langit).
+ */
 public class BallStrategy implements MovementStrategy {
 
     // Cooldown untuk mencegah double-flip instan

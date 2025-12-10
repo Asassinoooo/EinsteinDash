@@ -1,6 +1,7 @@
 package com.EinsteinDash.frontend.utils;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -9,14 +10,23 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.EinsteinDash.frontend.strategies.*;
 
 public class Player extends Sprite {
+
+    // === PHYSICS ===
     public World world;
     public Body b2body;
+
+    // === MOVEMENT CONFIG ===
+    private static final float MOVEMENT_SPEED = 3f;  // Kecepatan horizontal (auto-run)
+    private static final float JUMP_FORCE = 6.5f;    // Kekuatan lompat
+
+    // === STRATEGY PATTERN ===
     private MovementStrategy movementStrategy;
 
-    private static final float MOVEMENT_SPEED = 3f;
-    private static final float JUMP_FORCE = 6.5f;
+    // === INTERPOLATION (untuk smooth rendering) ===
+    private Vector2 previousPosition = new Vector2();
+    private Vector2 interpolatedPosition = new Vector2();
 
-    // --- TEXTURES ---
+    // === TEXTURES (untuk setiap mode) ===
     private Texture cubeTexture;
     private Texture shipTexture;
     private Texture ballTexture;
@@ -25,16 +35,15 @@ public class Player extends Sprite {
     private Texture robotTexture;
     private Texture spiderTexture;
 
-    // Logic Sensor Tanah & Interpolasi
-    private int footContacts = 0;
-    private Vector2 previousPosition = new Vector2();
-    private Vector2 interpolatedPosition = new Vector2();
+    // === GROUND DETECTION ===
+    private int footContacts = 0;  // Jumlah objek yang sedang diinjak
+
+    // ==================== CONSTRUCTOR ====================
 
     public Player(World world) {
         this.world = world;
 
-        // 1. LOAD SEMUA TEXTURE
-        // Pastikan nama file sesuai dengan yang ada di folder assets Anda
+        // Load semua texture
         cubeTexture = new Texture("player_cube.png");
         shipTexture = new Texture("player_ship.png");
         ballTexture = new Texture("player_ball.png");
@@ -43,7 +52,7 @@ public class Player extends Sprite {
         robotTexture = new Texture("player_robot.png");
         spiderTexture = new Texture("player_spider.png");
 
-        // Set awal
+        // Default: mode Cube
         setRegion(cubeTexture);
         setBounds(0, 0, 30 / Constants.PPM, 30 / Constants.PPM);
         setOrigin(getWidth() / 2, getHeight() / 2);
@@ -55,6 +64,9 @@ public class Player extends Sprite {
         this.movementStrategy = new CubeStrategy();
     }
 
+    // ==================== GROUND DETECTION ====================
+
+    /** Dipanggil saat player mulai menyentuh platform */
     // --- LOGIC GANTI STRATEGY ---
     public void setStrategy(MovementStrategy strategy) {
         this.movementStrategy = strategy;
@@ -89,9 +101,16 @@ public class Player extends Sprite {
 
     // --- SENSOR TANAH & INTERPOLASI ---
     public void addFootContact() { footContacts++; }
+
+    /** Dipanggil saat player meninggalkan platform */
     public void removeFootContact() { footContacts--; }
+
+    /** Cek apakah player sedang menyentuh tanah/platform */
     public boolean isOnGround() { return footContacts > 0; }
 
+    // ==================== INTERPOLATION ====================
+
+    /** Reset posisi interpolasi ke posisi fisik saat ini */
     public void capturePreviousPosition() { previousPosition.set(b2body.getPosition()); }
 
     public Vector2 getInterpolatedPosition() { return interpolatedPosition; }
@@ -102,6 +121,12 @@ public class Player extends Sprite {
         setPosition(b2body.getPosition().x - getWidth()/2, b2body.getPosition().y - getHeight()/2);
     }
 
+    /** Simpan posisi sebelum physics step */
+    public void capturePreviousPosition() {
+        previousPosition.set(b2body.getPosition());
+    }
+
+    /** Update posisi visual dengan interpolasi (smooth movement) */
     public void updateVisual(float alpha) {
         Vector2 currentPosition = b2body.getPosition();
         float x = previousPosition.x * (1 - alpha) + currentPosition.x * alpha;
@@ -110,6 +135,11 @@ public class Player extends Sprite {
         setPosition(x - getWidth() / 2, y - getHeight() / 2);
     }
 
+    public Vector2 getInterpolatedPosition() { return interpolatedPosition; }
+
+    // ==================== UPDATE ====================
+
+    /** Update logic player setiap frame */
     public void update(float dt) {
         movementStrategy.update(this, dt);
         updateVisualRotation(dt);
@@ -134,8 +164,8 @@ public class Player extends Sprite {
             }
         }
         else if (movementStrategy instanceof ShipStrategy) {
-            float targetRotation = velocityY * 3.0f;
-            targetRotation = MathUtils.clamp(targetRotation, -45, 45);
+            // Ship: Miring sesuai arah vertikal
+            float targetRotation = MathUtils.clamp(velocityY * 3.0f, -45, 45);
             setRotation(MathUtils.lerp(getRotation(), targetRotation, 0.1f));
         }
         else if (movementStrategy instanceof BallStrategy) {
@@ -156,6 +186,7 @@ public class Player extends Sprite {
             setRotation(MathUtils.lerp(getRotation(), targetRotation, 0.3f));
         }
         else if (movementStrategy instanceof RobotStrategy) {
+            // Robot: Selalu tegak
             setRotation(0);
         }
         // --- LOGIKA FIX SPIDER ---
@@ -175,20 +206,32 @@ public class Player extends Sprite {
         }
     }
 
-    public void jump() { movementStrategy.handleInput(this); }
+    // ==================== INPUT ====================
 
+    /** Handle input lompat/aksi (delegasi ke strategy) */
+    public void jump() {
+        movementStrategy.handleInput(this);
+    }
+
+    // ==================== PHYSICS SETUP ====================
+
+    /** Buat Box2D body untuk player */
     private void definePlayer() {
         BodyDef bdef = new BodyDef();
         bdef.position.set(32 / Constants.PPM, 64 / Constants.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
-        bdef.fixedRotation = true;
+        bdef.fixedRotation = true;  // Rotasi dihandle manual (visual only)
+
         b2body = world.createBody(bdef);
-        FixtureDef fdef = new FixtureDef();
+
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox((float)14 / Constants.PPM, (float)14 / Constants.PPM);
+        shape.setAsBox(14 / Constants.PPM, 14 / Constants.PPM);
+
+        FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
         fdef.friction = 0;
         fdef.restitution = 0;
+
         b2body.setUserData(this);
         b2body.createFixture(fdef).setUserData("PLAYER");
         shape.dispose();

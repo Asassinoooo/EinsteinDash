@@ -1,10 +1,14 @@
 package com.EinsteinDash.frontend.strategies;
 
+import com.EinsteinDash.frontend.utils.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
-import com.EinsteinDash.frontend.utils.Player;
 
+/**
+ * RobotStrategy - Mode robot dengan lompatan variabel.
+ * Semakin lama tombol ditahan, semakin tinggi lompatan (seperti Mario).
+ */
 public class RobotStrategy implements MovementStrategy {
 
     // --- TUNING PENTING ---
@@ -30,13 +34,12 @@ public class RobotStrategy implements MovementStrategy {
 
     @Override
     public void update(Player player, float dt) {
-        // 1. Gerak Horizontal
+        // Auto-run ke kanan
         Vector2 vel = player.b2body.getLinearVelocity();
         if (vel.x < player.getMovementSpeed()) {
             player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
         }
 
-        // 2. Gravitasi Normal
         player.b2body.setGravityScale(1f);
 
         // 3. Update Timers
@@ -102,6 +105,7 @@ public class RobotStrategy implements MovementStrategy {
         }
     }
 
+    /** Reset jump timer (dipanggil saat mendarat) */
     public void setJumpTimer(float value) {
         jumpTimer = value;
     }

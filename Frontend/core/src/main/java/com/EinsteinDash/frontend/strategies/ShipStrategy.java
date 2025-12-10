@@ -1,10 +1,14 @@
 package com.EinsteinDash.frontend.strategies;
 
+import com.EinsteinDash.frontend.utils.Player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
-import com.EinsteinDash.frontend.utils.Player;
 
+/**
+ * ShipStrategy - Mode terbang dengan kontrol continuous.
+ * Tahan tombol untuk naik, lepas untuk turun (gravitasi rendah).
+ */
 public class ShipStrategy implements MovementStrategy {
 
     private static final float SHIP_GRAVITY_SCALE = 0.5f;
@@ -13,25 +17,33 @@ public class ShipStrategy implements MovementStrategy {
 
     @Override
     public void update(Player player, float dt) {
+        // Auto-run ke kanan
         Vector2 vel = player.b2body.getLinearVelocity();
         if (vel.x < player.getMovementSpeed()) {
             player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
         }
 
-        player.b2body.setGravityScale(SHIP_GRAVITY_SCALE);
+        player.b2body.setGravityScale(GRAVITY_SCALE);
 
-        if (Gdx.input.isTouched() || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            player.b2body.applyForceToCenter(0, SHIP_UPWARD_FORCE, true);
+        // Terbang ke atas saat tombol ditahan
+        boolean isHolding = Gdx.input.isTouched() ||
+            Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
+            Gdx.input.isKeyPressed(Input.Keys.UP);
+
+        if (isHolding) {
+            player.b2body.applyForceToCenter(0, UPWARD_FORCE, true);
         }
 
+        // Batasi kecepatan vertikal
         float currentVelY = player.b2body.getLinearVelocity().y;
-        if (currentVelY > MAX_VERTICAL_SPEED) {
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), MAX_VERTICAL_SPEED);
-        } else if (currentVelY < -MAX_VERTICAL_SPEED) {
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), -MAX_VERTICAL_SPEED);
+        if (Math.abs(currentVelY) > MAX_VERTICAL_SPEED) {
+            float clampedY = Math.signum(currentVelY) * MAX_VERTICAL_SPEED;
+            player.b2body.setLinearVelocity(player.getMovementSpeed(), clampedY);
         }
     }
 
     @Override
-    public void handleInput(Player player) {}
+    public void handleInput(Player player) {
+        // Input ditangani di update() untuk responsivitas
+    }
 }

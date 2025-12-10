@@ -1,37 +1,42 @@
 package com.EinsteinDash.frontend.network;
 
+import java.util.ArrayList;
+
+import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.model.ProgressDto;
+import com.EinsteinDash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.utils.Session;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net;
 import com.badlogic.gdx.net.HttpRequestBuilder;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-import com.EinsteinDash.frontend.utils.Constants;
-import com.EinsteinDash.frontend.utils.Session;
-import java.util.ArrayList;
-import com.badlogic.gdx.utils.Json;
-import com.EinsteinDash.frontend.model.LevelDto;
 import com.badlogic.gdx.utils.JsonWriter;
 
+/**
+ * BackendFacade - Pattern Facade untuk komunikasi dengan REST API backend.
+ * Menyederhanakan HTTP requests untuk Login, Register, Levels, Progress, dan Leaderboard.
+ */
 public class BackendFacade {
 
-    // Interface sederhana untuk komunikasi balik ke UI
+    // ==================== CALLBACK INTERFACES ====================
+
     public interface LoginCallback {
         void onSuccess();
         void onFailed(String errorMessage);
     }
 
-    //interface callback untuk register
     public interface RegisterCallback {
         void onSuccess();
         void onFailed(String errorMessage);
     }
 
     public interface LeaderboardCallback {
-        void onSuccess(JsonValue rootData); // Mengembalikan data JSON mentah
+        void onSuccess(JsonValue rootData);
         void onFailed(String errorMessage);
     }
-    //interface untuk komunikasi balik list level
+
     public interface LevelListCallback {
         void onSuccess(ArrayList<LevelDto> levels);
         void onFailed(String errorMessage);
@@ -47,6 +52,9 @@ public class BackendFacade {
         void onFailed(String error);
     }
 
+    // ==================== AUTHENTICATION ====================
+
+    /** Login user dan simpan data ke Session */
     public void login(String username, String password, final LoginCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         String content = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";

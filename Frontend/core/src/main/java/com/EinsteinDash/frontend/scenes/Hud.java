@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend.scenes;
 
+import com.EinsteinDash.frontend.utils.Constants;
 import com.EinsteinDash.frontend.screens.PauseWindow; // Pastikan import ini
 import com.EinsteinDash.frontend.utils.GamePalette;
 import com.badlogic.gdx.graphics.Color;
@@ -16,36 +17,46 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.EinsteinDash.frontend.utils.Constants;
 
+/**
+ * Hud - Heads-Up Display yang menampilkan progress bar dan persentase.
+ * Overlay di atas gameplay screen.
+ */
 public class Hud {
+
     public Stage stage;
     private Viewport viewport;
 
-    // Widget UI
+    // === UI WIDGETS ===
     private ProgressBar progressBar;
     private Label percentageLabel;
-
+  
     // --- TAMBAHAN BARU: Reference ke Pause Window ---
     private PauseWindow currentPauseWindow;
 
+    // ==================== CONSTRUCTOR ====================
     public Hud(SpriteBatch sb) {
-        // Setup Viewport UI
         viewport = new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT, new OrthographicCamera());
         stage = new Stage(viewport, sb);
 
-        // Buat style progress bar
-        ProgressBar.ProgressBarStyle progressBarStyle = new ProgressBar.ProgressBarStyle();
-        progressBarStyle.background = getDrawable(GamePalette.Dark.MIDNIGHT, 10, 10);
-        progressBarStyle.knobBefore = getDrawable(GamePalette.Neon.LIME, 10, 10);
-        progressBarStyle.knob = getDrawable(Color.CLEAR, 0, 10);
+        setupProgressBar();
+    }
 
-        progressBar = new ProgressBar(0, 100, 0.01f, false, progressBarStyle);
+    /** Setup progress bar dan label */
+    private void setupProgressBar() {
+        // Style progress bar
+        ProgressBar.ProgressBarStyle style = new ProgressBar.ProgressBarStyle();
+        style.background = createDrawable(GamePalette.Dark.MIDNIGHT, 10, 10);
+        style.knobBefore = createDrawable(GamePalette.Neon.LIME, 10, 10);
+        style.knob = createDrawable(Color.CLEAR, 0, 10);
+
+        progressBar = new ProgressBar(0, 100, 0.01f, false, style);
         progressBar.setValue(0);
-        progressBar.setAnimateDuration(0.0f);
+        progressBar.setAnimateDuration(0.0f);  // Instant update
+
         percentageLabel = new Label("0%", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
 
-        // Layout dengan table
+        // Layout
         Table table = new Table();
         table.top();
         table.setFillParent(true);
@@ -55,7 +66,8 @@ public class Hud {
         stage.addActor(table);
     }
 
-    private TextureRegionDrawable getDrawable(Color color, int w, int h) {
+    /** Helper: Buat drawable dari warna solid */
+    private TextureRegionDrawable createDrawable(Color color, int w, int h) {
         Pixmap pixmap = new Pixmap(w, h, Pixmap.Format.RGBA8888);
         pixmap.setColor(color);
         pixmap.fill();
@@ -64,17 +76,19 @@ public class Hud {
         return drawable;
     }
 
-    public void update(float playerX, float levelEndX) {
-        float progress = playerX / levelEndX;
-        if (progress < 0) progress = 0;
-        if (progress > 1) progress = 1;
+    // ==================== UPDATE ====================
 
+    /** Update progress bar berdasarkan posisi player */
+    public void update(float playerX, float levelEndX) {
+        float progress = Math.max(0, Math.min(1, playerX / levelEndX));
         progressBar.setValue(progress * 100);
         percentageLabel.setText((int)(progress * 100) + "%");
     }
 
-    // --- METHOD BARU: KONTROL PAUSE MENU ---
-
+    public int getPercentage() {
+        return (int) progressBar.getValue();
+    
+    // --- KONTROL PAUSE MENU ---
     public void showPauseWindow(PauseWindow window) {
         // Jika ada window lama, hapus dulu agar tidak menumpuk
         if (currentPauseWindow != null) {
@@ -96,7 +110,9 @@ public class Hud {
         stage.dispose();
     }
 
-    public int getPercentage() {
-        return (int)progressBar.getValue();
+    // ==================== DISPOSE ====================
+
+    public void dispose() {
+        stage.dispose();
     }
 }
