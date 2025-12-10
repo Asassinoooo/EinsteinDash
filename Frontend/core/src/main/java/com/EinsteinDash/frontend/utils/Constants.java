@@ -19,10 +19,10 @@ public class Constants {
     /** Base URL untuk REST API backend */
     public static final String BASE_URL = "http://localhost:8081/api";
 
-    // === SPEED MULTIPLIERS ===
-    public static final float SPEED_HALF = 0.5f;
-    public static final float SPEED_NORMAL = 1.0f;
-    public static final float SPEED_DOUBLE = 2.0f;
-    public static final float SPEED_TRIPLE = 3.0f;
-    public static final float SPEED_QUAD = 4.0f;
+    // === SPEED VALUES (Blocks/s converted to m/s: 1 block = 0.32m) ===
+    public static final float SPEED_HALF = 2.688f; // 8.4 blocks/s
+    public static final float SPEED_NORMAL = 3.328f; // 10.4 blocks/s
+    public static final float SPEED_DOUBLE = 4.128f; // 12.9 blocks/s
+    public static final float SPEED_TRIPLE = 4.992f; // 15.6 blocks/s
+    public static final float SPEED_QUAD = 6.144f; // 19.2 blocks/s
 }
