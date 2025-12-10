@@ -11,7 +11,8 @@ public class Session {
     // === SINGLETON ===
     private static Session instance;
 
-    private Session() {} // Private constructor
+    private Session() {
+    } // Private constructor
 
     public static Session getInstance() {
         if (instance == null) {
@@ -24,6 +25,7 @@ public class Session {
     private int userId;
     private String username;
     private int totalStars;
+    private int totalCoins;
     private boolean isLoggedIn = false;
 
     // Cache progress level (levelId -> coins)
@@ -34,10 +36,11 @@ public class Session {
     /**
      * Simpan data user setelah login berhasil.
      */
-    public void setUserData(int id, String username, int stars) {
+    public void setUserData(int id, String username, int stars, int coins) {
         this.userId = id;
         this.username = username;
         this.totalStars = stars;
+        this.totalCoins = coins;
         this.isLoggedIn = true;
     }
 
@@ -54,10 +57,25 @@ public class Session {
 
     // ==================== GETTERS ====================
 
-    public int getUserId() { return userId; }
-    public String getUsername() { return username; }
-    public int getTotalStars() { return totalStars; }
-    public boolean isLoggedIn() { return isLoggedIn; }
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public int getTotalStars() {
+        return totalStars;
+    }
+
+    public int getTotalCoins() {
+        return totalCoins;
+    }
+
+    public boolean isLoggedIn() {
+        return isLoggedIn;
+    }
 
     /** Cek apakah level sudah pernah diselesaikan */
     public boolean isLevelCompleted(int levelId) {

@@ -16,7 +16,8 @@ import com.badlogic.gdx.utils.JsonWriter;
 
 /**
  * BackendFacade - Pattern Facade untuk komunikasi dengan REST API backend.
- * Menyederhanakan HTTP requests untuk Login, Register, Levels, Progress, dan Leaderboard.
+ * Menyederhanakan HTTP requests untuk Login, Register, Levels, Progress, dan
+ * Leaderboard.
  */
 public class BackendFacade {
 
@@ -24,31 +25,37 @@ public class BackendFacade {
 
     public interface LoginCallback {
         void onSuccess();
+
         void onFailed(String errorMessage);
     }
 
     public interface RegisterCallback {
         void onSuccess();
+
         void onFailed(String errorMessage);
     }
 
     public interface LeaderboardCallback {
         void onSuccess(JsonValue rootData);
+
         void onFailed(String errorMessage);
     }
 
     public interface LevelListCallback {
         void onSuccess(ArrayList<LevelDto> levels);
+
         void onFailed(String errorMessage);
     }
 
     public interface SyncCallback {
         void onSuccess(int serverCoins, boolean serverCompleted);
+
         void onFailed(String error);
     }
 
     public interface ProgressListCallback {
         void onSuccess(ArrayList<ProgressDto> progressList);
+
         void onFailed(String error);
     }
 
@@ -60,11 +67,11 @@ public class BackendFacade {
         String content = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
-            .method(Net.HttpMethods.POST)
-            .url(Constants.BASE_URL + "/login")
-            .header("Content-Type", "application/json")
-            .content(content)
-            .build();
+                .method(Net.HttpMethods.POST)
+                .url(Constants.BASE_URL + "/login")
+                .header("Content-Type", "application/json")
+                .content(content)
+                .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
             @Override
@@ -78,9 +85,10 @@ public class BackendFacade {
 
                     // SIMPAN KE SINGLETON SESSION
                     Session.getInstance().setUserData(
-                        root.getInt("id"),
-                        root.getString("username"),
-                        root.getInt("totalStars")
+                            root.getInt("id"),
+                            root.getString("username"),
+                            root.getInt("totalStars"),
+                            root.getInt("totalCoins", 0) // Default 0 jika null
                     );
 
                     // Beri tahu UI di thread utama (Wajib Gdx.app.postRunnable untuk UI)
@@ -96,7 +104,8 @@ public class BackendFacade {
             }
 
             @Override
-            public void cancelled() { }
+            public void cancelled() {
+            }
         });
     }
 
@@ -107,11 +116,11 @@ public class BackendFacade {
         String content = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
-            .method(Net.HttpMethods.POST)
-            .url(Constants.BASE_URL + "/register") // Endpoint register
-            .header("Content-Type", "application/json")
-            .content(content)
-            .build();
+                .method(Net.HttpMethods.POST)
+                .url(Constants.BASE_URL + "/register") // Endpoint register
+                .header("Content-Type", "application/json")
+                .content(content)
+                .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
             @Override
@@ -136,16 +145,17 @@ public class BackendFacade {
             }
 
             @Override
-            public void cancelled() { }
+            public void cancelled() {
+            }
         });
     }
 
     public void getLeaderboard(final LeaderboardCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
-            .method(Net.HttpMethods.GET)
-            .url(Constants.BASE_URL + "/leaderboard") // Endpoint backend
-            .build();
+                .method(Net.HttpMethods.GET)
+                .url(Constants.BASE_URL + "/leaderboard") // Endpoint backend
+                .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
             @Override
@@ -170,18 +180,19 @@ public class BackendFacade {
             }
 
             @Override
-            public void cancelled() { }
+            public void cancelled() {
+            }
         });
     }
 
-   public void fetchLevels(final LevelListCallback callback) {
+    public void fetchLevels(final LevelListCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
-            .method(Net.HttpMethods.GET)
-            .url(Constants.BASE_URL + "/levels")
-            .header("Content-Type", "application/json")
-            .timeout(30000)
-            .build();
+                .method(Net.HttpMethods.GET)
+                .url(Constants.BASE_URL + "/levels")
+                .header("Content-Type", "application/json")
+                .timeout(30000)
+                .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
             @Override
@@ -210,30 +221,31 @@ public class BackendFacade {
             }
 
             @Override
-            public void cancelled() { }
+            public void cancelled() {
+            }
         });
     }
 
-    @SuppressWarnings("unchecked")  // biar bersih ajah
-    public void syncProgress(int userId, int levelId, int percentage, int attemptsToAdd, int coinsCollected, final SyncCallback callback) {
+    @SuppressWarnings("unchecked") // biar bersih ajah
+    public void syncProgress(int userId, int levelId, int percentage, int attemptsToAdd, int coinsCollected,
+            final SyncCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
 
         // Setup Object Json
         Json json = new Json();
         json.setOutputType(JsonWriter.OutputType.json);
 
-
         // Buat Data & Konversi ke String
         SyncData data = new SyncData(userId, levelId, percentage, attemptsToAdd, coinsCollected);
         String content = json.toJson(data);
 
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
-            .method(Net.HttpMethods.POST)
-            .url(Constants.BASE_URL + "/sync")
-            .header("Content-Type", "application/json")
-            .content(content)
-            .timeout(30000)
-            .build();
+                .method(Net.HttpMethods.POST)
+                .url(Constants.BASE_URL + "/sync")
+                .header("Content-Type", "application/json")
+                .content(content)
+                .timeout(30000)
+                .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
             @Override
@@ -260,17 +272,18 @@ public class BackendFacade {
             }
 
             @Override
-            public void cancelled() { }
+            public void cancelled() {
+            }
         });
     }
 
     public void fetchUserProgress(int userId, final ProgressListCallback callback) {
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest httpRequest = requestBuilder.newRequest()
-            .method(Net.HttpMethods.GET)
-            .url(Constants.BASE_URL + "/progress/" + userId)
-            .timeout(30000)
-            .build();
+                .method(Net.HttpMethods.GET)
+                .url(Constants.BASE_URL + "/progress/" + userId)
+                .timeout(30000)
+                .build();
 
         Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
             @Override
@@ -296,7 +309,8 @@ public class BackendFacade {
             }
 
             @Override
-            public void cancelled() { }
+            public void cancelled() {
+            }
         });
     }
 
