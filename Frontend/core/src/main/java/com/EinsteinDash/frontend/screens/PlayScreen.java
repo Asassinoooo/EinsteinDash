@@ -198,7 +198,6 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     /** Kamera mengikuti player dengan efek smooth */
     private void updateCameraPositionSmooth() {
         Vector2 targetPos = player.getInterpolatedPosition();
-
         float targetX = targetPos.x + (gamePort.getWorldWidth() / 4);
         float minX = gamePort.getWorldWidth() / 2;
         if (targetX < minX) targetX = minX;
@@ -207,7 +206,6 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         float lerpFactor = 0.1f;
         gameCam.position.x += (targetX - gameCam.position.x) * lerpFactor;
         gameCam.position.y = gamePort.getWorldHeight() / 3;
-
         gameCam.update();
     }
 
@@ -284,16 +282,16 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     // ==================== PAUSE/RESUME ====================
 
+    // --- FIX LOGIC PAUSE ---
     public void pauseGame() {
         currentState = State.PAUSED;
 
-        // Pause music
-        game.getAudioManager().pause();
-
-        // Tampilkan pause window
         Skin skin = game.assets.get("uiskin.json", Skin.class);
         PauseWindow pauseWindow = new PauseWindow(game, this, skin);
-        hud.stage.addActor(pauseWindow);
+
+        // GUNAKAN METHOD BARU DI HUD UNTUK MENYIMPAN REFERENSI
+        hud.showPauseWindow(pauseWindow);
+
         Gdx.input.setInputProcessor(hud.stage);
     }
 
@@ -303,7 +301,10 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Resume music
         game.getAudioManager().resume();
 
-        Gdx.input.setInputProcessor(null);  // Kembalikan ke game input
+        // PANGGIL INI UNTUK MENGHAPUS WINDOW DARI LAYAR
+        hud.hidePauseWindow();
+
+        Gdx.input.setInputProcessor(null);
     }
 
     public void restartLevel() {

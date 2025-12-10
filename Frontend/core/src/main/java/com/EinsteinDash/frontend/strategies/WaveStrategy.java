@@ -11,7 +11,10 @@ import com.badlogic.gdx.Input;
  */
 public class WaveStrategy implements MovementStrategy {
 
-    private static final float WAVE_SPEED = 4.0f;  // Kecepatan vertikal (sama dengan horizontal untuk 45°)
+    // Kecepatan Vertikal Wave
+    // Biasanya diset sama atau sedikit lebih tinggi dari movement speed horizontal
+    // agar sudutnya tajam (sekitar 45 derajat).
+    private static final float WAVE_SPEED = 3f;
 
     @Override
     public void update(Player player, float dt) {

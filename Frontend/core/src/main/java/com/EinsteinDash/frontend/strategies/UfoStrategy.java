@@ -11,8 +11,9 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class UfoStrategy implements MovementStrategy {
 
-    private static final float JUMP_FORCE = 5.5f;       // Lompatan lebih kecil dari Cube
-    private static final float MAX_VELOCITY = 5.0f;     // Batas kecepatan vertikal
+    // Tuning Fisika UFO
+    private static final float UFO_JUMP_FORCE = 4.5f; // Hentakan lebih kecil dari Cube (karena bisa spam)
+    private static final float MAX_UFO_VELOCITY = 3.5f; // Batas kecepatan agar tidak tembus atap saat spam
 
     @Override
     public void update(Player player, float dt) {
@@ -22,7 +23,8 @@ public class UfoStrategy implements MovementStrategy {
             player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
         }
 
-        player.b2body.setGravityScale(1f);
+        // 2. Gravitasi Normal
+        player.b2body.setGravityScale(0.5f);
 
         // Batasi kecepatan agar tidak tembus ceiling
         if (vel.y > MAX_VELOCITY) {

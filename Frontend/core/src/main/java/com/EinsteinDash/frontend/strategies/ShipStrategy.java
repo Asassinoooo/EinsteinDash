@@ -11,9 +11,9 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class ShipStrategy implements MovementStrategy {
 
-    private static final float GRAVITY_SCALE = 0.5f;     // Gravitasi lebih ringan
-    private static final float UPWARD_FORCE = 27f;       // Gaya dorong ke atas
-    private static final float MAX_VERTICAL_SPEED = 3.5f; // Batas kecepatan vertikal
+    private static final float SHIP_GRAVITY_SCALE = 0.5f;
+    private static final float SHIP_UPWARD_FORCE = 28f;
+    private static final float MAX_VERTICAL_SPEED = 3.5f;
 
     @Override
     public void update(Player player, float dt) {

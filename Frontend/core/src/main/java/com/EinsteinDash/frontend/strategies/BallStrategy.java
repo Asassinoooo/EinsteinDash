@@ -11,31 +11,58 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class BallStrategy implements MovementStrategy {
 
-    private float bufferTimer = 0;  // Cooldown untuk mencegah spam
+    // Cooldown untuk mencegah double-flip instan
+    private float cooldownTimer = 0;
+
+    // Buffer input (agar responsif saat mendarat)
+    private float inputBufferTimer = 0;
+
+    // Tuning
+    private static final float COOLDOWN_TIME = 0.2f; // Naikkan sedikit agar aman
+    private static final float BUFFER_TIME = 0.1f;   // Jendela buffer
 
     @Override
     public void update(Player player, float dt) {
-        // Auto-run ke kanan
+        // 1. Gerak Horizontal
         Vector2 vel = player.b2body.getLinearVelocity();
         if (vel.x < player.getMovementSpeed()) {
             player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
         }
 
-        if (bufferTimer > 0) bufferTimer -= dt;
+        // 2. Kurangi Timer
+        if (cooldownTimer > 0) cooldownTimer -= dt;
+        if (inputBufferTimer > 0) inputBufferTimer -= dt;
     }
 
     @Override
     public void handleInput(Player player) {
-        boolean isJustPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
+        boolean isPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
             Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
             Gdx.input.justTouched();
 
-        // Flip gravitasi saat di permukaan
-        if (isJustPressed && player.isOnGround() && bufferTimer <= 0) {
+        if (isPressed) {
+            inputBufferTimer = BUFFER_TIME;
+        }
+
+        // SYARAT GANTI GRAVITASI:
+        // 1. Buffer Input Aktif
+        // 2. Cooldown Habis
+        // 3. Sensor Kaki Menyentuh Tanah (isOnGround)
+        // 4. [FIX UTAMA] Kecepatan Y mendekati 0.
+        //    Jika bola sedang terbang naik/turun kencang (Vel Y > 0.5),
+        //    berarti dia di udara (apapun kata sensor kontak).
+        boolean isPhysicallyOnGround = Math.abs(player.b2body.getLinearVelocity().y) < 1.0f;
+
+        if (inputBufferTimer > 0 && cooldownTimer <= 0 && player.isOnGround() && isPhysicallyOnGround) {
+
+            // Flip Gravitasi
             float currentGravity = player.b2body.getGravityScale();
-            player.b2body.setGravityScale(currentGravity * -1);  // Balik gravitasi
-            player.b2body.setAwake(true);  // Aktifkan physics
-            bufferTimer = 0f;
+            player.b2body.setGravityScale(currentGravity * -1);
+            player.b2body.setAwake(true);
+
+            // Set Cooldown
+            cooldownTimer = COOLDOWN_TIME;
+            inputBufferTimer = 0;
         }
     }
 }

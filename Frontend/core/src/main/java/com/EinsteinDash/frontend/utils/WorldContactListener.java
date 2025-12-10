@@ -130,16 +130,80 @@ public class WorldContactListener implements ContactListener {
                     notifyPlayerDied();
                     return;
                 }
-            }
-            else if (strategy instanceof WaveStrategy) {
-                notifyPlayerDied();
-                return;
-            }
-            else if (strategy instanceof BallStrategy || strategy instanceof ShipStrategy ||
-                     strategy instanceof SpiderStrategy || strategy instanceof UfoStrategy) {
-                if (checkSideCollision(playerFix.getBody(), otherFix.getBody())) {
-                    notifyPlayerDied();
-                    return;
+                else if (type.equals("BLOCK") || type.equals("FLOOR") || type.equals("CEILING")) {
+                    // Logic Deteksi Tabrakan
+                    // Apakah ini lantai (aman) atau tembok (mati)?
+
+                    boolean isSafeLanding = true;
+
+                    if (type.equals("BLOCK") || type.equals("FLOOR")) {
+                        if (playerBodyData instanceof Player) {
+                            Player player = (Player) playerBodyData;
+                            if (player.getStrategy() instanceof RobotStrategy) {
+                                RobotStrategy robotStrategy = ((RobotStrategy) player.getStrategy());
+                                robotStrategy.setJumpTimer(0f);
+                            }
+                        }
+                    }
+
+                    if (type.equals("BLOCK")) {
+                        // Pastikan data yang kita pegang adalah Player
+                        if (playerBodyData instanceof Player) {
+                            Player player = (Player) playerBodyData;
+
+                            // --- MODIFIKASI: HANYA CEK DINDING JIKA MODE CUBE ---
+                            if (player.getStrategy() instanceof CubeStrategy || player.getStrategy() instanceof RobotStrategy) {
+
+                                Body playerBody = playerFix.getBody();
+                                Body blockBody = otherFix.getBody();
+
+                                float playerBottom = playerBody.getPosition().y - (15 / Constants.PPM);
+                                float blockTop = blockBody.getPosition().y + (16 / Constants.PPM);
+                                float tolerance = 0.05f;
+
+                                // Jika kaki player DI BAWAH permukaan balok, berarti nabrak samping/bawah
+                                if (playerBottom < blockTop - tolerance) {
+                                    isSafeLanding = false;
+                                    System.out.println("CRASHED WALL (Cube Mode)!");
+                                    notifyPlayerDied();
+                                }
+                            }
+                            else if (player.getStrategy() instanceof WaveStrategy) {
+                                notifyPlayerDied();
+                                return; // Stop logic
+
+                                // Jika FLOOR (tanah dasar/langit batas world), wave mati juga biasanya
+                                // Tapi kalau FLOOR itu batas level aman, biarkan.
+                                // Asumsi: BLOCK = Obstacle, FLOOR = Safe Border.
+                                // Jika Anda ingin Wave mati kena lantai dasar juga, uncomment notifyPlayerDied di bawah.
+                                // notifyPlayerDied();
+                            }
+                            else if (player.getStrategy() instanceof BallStrategy ||
+                                player.getStrategy() instanceof ShipStrategy ||
+                                player.getStrategy() instanceof SpiderStrategy ||
+                                player.getStrategy() instanceof UfoStrategy) {
+                                if (checkSideCollision(playerFix.getBody(), otherFix.getBody())) {
+                                    System.out.println("CRASH SIDE! (Mode: " + player.getStrategy().getClass().getSimpleName() + ")");
+                                    notifyPlayerDied();
+                                } else {
+                                    // Jika tidak mati (berarti kena atas/bawah), tambahkan kontak kaki
+                                    player.addFootContact();
+                                }
+                            }
+                        }
+
+
+                    }
+
+
+
+                    // Jika Aman (Mendarat di atas), tambahkan sensor kaki
+                    if (isSafeLanding && playerBodyData instanceof Player) {
+                        ((Player) playerBodyData).addFootContact();
+                    }
+                }
+                else if (type.equals("GOAL")) {
+                    notifyLevelCompleted();
                 }
                 player.addFootContact();
                 return;

@@ -1,6 +1,7 @@
 package com.EinsteinDash.frontend.scenes;
 
 import com.EinsteinDash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.screens.PauseWindow; // Pastikan import ini
 import com.EinsteinDash.frontend.utils.GamePalette;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -29,9 +30,11 @@ public class Hud {
     // === UI WIDGETS ===
     private ProgressBar progressBar;
     private Label percentageLabel;
+  
+    // --- TAMBAHAN BARU: Reference ke Pause Window ---
+    private PauseWindow currentPauseWindow;
 
     // ==================== CONSTRUCTOR ====================
-
     public Hud(SpriteBatch sb) {
         viewport = new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT, new OrthographicCamera());
         stage = new Stage(viewport, sb);
@@ -84,6 +87,27 @@ public class Hud {
 
     public int getPercentage() {
         return (int) progressBar.getValue();
+    
+    // --- KONTROL PAUSE MENU ---
+    public void showPauseWindow(PauseWindow window) {
+        // Jika ada window lama, hapus dulu agar tidak menumpuk
+        if (currentPauseWindow != null) {
+            currentPauseWindow.remove();
+        }
+
+        this.currentPauseWindow = window;
+        stage.addActor(currentPauseWindow);
+    }
+
+    public void hidePauseWindow() {
+        if (currentPauseWindow != null) {
+            currentPauseWindow.remove(); // Hapus dari layar
+            currentPauseWindow = null;   // Reset variable
+        }
+    }
+
+    public void dispose() {
+        stage.dispose();
     }
 
     // ==================== DISPOSE ====================
