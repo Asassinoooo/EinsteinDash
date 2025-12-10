@@ -36,20 +36,22 @@ public class RobotStrategy implements MovementStrategy {
     public void update(Player player, float dt) {
         // Auto-run ke kanan
         Vector2 vel = player.b2body.getLinearVelocity();
-        if (vel.x < player.getMovementSpeed()) {
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
+        if (vel.x < player.getCurrentSpeed()) {
+            player.b2body.setLinearVelocity(player.getCurrentSpeed(), vel.y);
         }
 
-        player.b2body.setGravityScale(1f);
+        // REMOVED: player.b2body.setGravityScale(1f); -> Handled by Player state
 
         // 3. Update Timers
-        if (inputBufferTimer > 0) inputBufferTimer -= dt;
-        if (jumpCooldown > 0) jumpCooldown -= dt;
+        if (inputBufferTimer > 0)
+            inputBufferTimer -= dt;
+        if (jumpCooldown > 0)
+            jumpCooldown -= dt;
 
         // Cek Input Hold
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
-            Gdx.input.isKeyPressed(Input.Keys.UP) ||
-            Gdx.input.isTouched();
+                Gdx.input.isKeyPressed(Input.Keys.UP) ||
+                Gdx.input.isTouched();
 
         // Update status pelepasan tombol
         if (!isHolding) {
@@ -60,7 +62,9 @@ public class RobotStrategy implements MovementStrategy {
         if (isJumping) {
             // Lanjut dorong HANYA jika tombol ditahan & waktu belum habis
             if (isHolding && jumpTimer < MAX_JUMP_TIME) {
-                float currentForce = BASE_THRUST + (jumpTimer * TIME_MULTIPLIER);
+                float basicForce = BASE_THRUST + (jumpTimer * TIME_MULTIPLIER);
+                float currentForce = player.isGravityReversed() ? -basicForce : basicForce;
+
                 player.b2body.applyForceToCenter(0, currentForce, true);
                 jumpTimer += dt;
             } else {
@@ -73,8 +77,8 @@ public class RobotStrategy implements MovementStrategy {
     @Override
     public void handleInput(Player player) {
         boolean jumpStart = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
-            Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
-            Gdx.input.justTouched();
+                Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
+                Gdx.input.justTouched();
 
         if (jumpStart) {
             inputBufferTimer = BUFFER_TIME;
@@ -101,7 +105,8 @@ public class RobotStrategy implements MovementStrategy {
             jumpCooldown = COOLDOWN_TIME;
 
             // Hentakan Awal
-            player.b2body.setLinearVelocity(player.b2body.getLinearVelocity().x, INITIAL_VELOCITY);
+            float initialVel = player.isGravityReversed() ? -INITIAL_VELOCITY : INITIAL_VELOCITY;
+            player.b2body.setLinearVelocity(player.b2body.getLinearVelocity().x, initialVel);
         }
     }
 

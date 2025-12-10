@@ -26,8 +26,8 @@ public class Player extends Sprite {
     public Body b2body;
 
     // === MOVEMENT CONFIG ===
-    private static final float MOVEMENT_SPEED = 3f;  // Kecepatan horizontal (auto-run)
-    private static final float JUMP_FORCE = 6.5f;    // Kekuatan lompat
+    private static final float MOVEMENT_SPEED = 3f; // Kecepatan horizontal (auto-run)
+    private static final float JUMP_FORCE = 6.5f; // Kekuatan lompat
 
     // === STRATEGY PATTERN ===
     private MovementStrategy movementStrategy;
@@ -46,7 +46,11 @@ public class Player extends Sprite {
     private Texture spiderTexture;
 
     // === GROUND DETECTION ===
-    private int footContacts = 0;  // Jumlah objek yang sedang diinjak
+    private int footContacts = 0; // Jumlah objek yang sedang diinjak
+
+    // === GRAVITY & SPEED STATE ===
+    private boolean isGravityReversed = false;
+    private float currentSpeedMultiplier = 1.0f;
 
     // ==================== CONSTRUCTOR ====================
 
@@ -87,43 +91,52 @@ public class Player extends Sprite {
         // FIX: Reset Flip (Mirroring) agar mode lain tidak ikut terbalik
         setFlip(false, false);
 
-        b2body.setGravityScale(1f);
+        // REMOVED manual b2body.setGravityScale(1f);
 
         // Ganti Texture & Setting Khusus
         if (strategy instanceof CubeStrategy) {
             setRegion(cubeTexture);
         } else if (strategy instanceof ShipStrategy) {
             setRegion(shipTexture);
-            b2body.setGravityScale(0.5f);
+            // REMOVED hardcoded gravity
         } else if (strategy instanceof BallStrategy) {
             setRegion(ballTexture);
         } else if (strategy instanceof UfoStrategy) {
             setRegion(ufoTexture);
         } else if (strategy instanceof WaveStrategy) {
             setRegion(waveTexture);
-            b2body.setGravityScale(0f);
+            // REMOVED hardcoded gravity
         } else if (strategy instanceof RobotStrategy) {
             setRegion(robotTexture);
         } else if (strategy instanceof SpiderStrategy) {
             setRegion(spiderTexture);
         }
+
+        // Apply correct gravity based on new strategy and current reverse state
+        updateGravityScale();
     }
 
     // --- SENSOR TANAH & INTERPOLASI ---
-    public void addFootContact() { footContacts++; }
+    public void addFootContact() {
+        footContacts++;
+    }
 
     /** Dipanggil saat player meninggalkan platform */
-    public void removeFootContact() { footContacts--; }
+    public void removeFootContact() {
+        footContacts--;
+    }
 
     /** Cek apakah player sedang menyentuh tanah/platform */
-    public boolean isOnGround() { return footContacts > 0; }
+    public boolean isOnGround() {
+        return footContacts > 0;
+    }
 
     // ==================== INTERPOLATION ====================
 
     public void resetInterpolation() {
         previousPosition.set(b2body.getPosition());
         interpolatedPosition.set(b2body.getPosition());
-        setPosition(b2body.getPosition().x - getWidth()/2, b2body.getPosition().y - getHeight()/2);
+        setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
     }
 
     /** Simpan posisi sebelum physics step */
@@ -140,7 +153,9 @@ public class Player extends Sprite {
         setPosition(x - getWidth() / 2, y - getHeight() / 2);
     }
 
-    public Vector2 getInterpolatedPosition() { return interpolatedPosition; }
+    public Vector2 getInterpolatedPosition() {
+        return interpolatedPosition;
+    }
 
     // ==================== UPDATE ====================
 
@@ -154,10 +169,19 @@ public class Player extends Sprite {
     private void updateVisualRotation(float dt) {
         float velocityY = b2body.getLinearVelocity().y;
 
-        // Reset flip untuk semua mode KECUALI Spider
-        if (!(movementStrategy instanceof SpiderStrategy)) {
-            setFlip(false, false);
+        // Reset flip untuk semua mode KECUALI Spider (karena Spider punya logic
+        // sendiri)
+        // Update: Sekarang support Global Gravity Flip.
+        boolean flipY = isGravityReversed; // Default flip if gravity reversed
+        boolean flipX = false;
+
+        if (movementStrategy instanceof SpiderStrategy) {
+            // Logic khusus Spider digabung dengan Global Gravity
+            boolean isCeiling = b2body.getGravityScale() < 0; // Ini akan konsisten dengan isGravityReversed
+            flipY = isCeiling;
         }
+
+        setFlip(flipX, flipY);
 
         if (movementStrategy instanceof CubeStrategy) {
             if (!isOnGround()) {
@@ -167,30 +191,29 @@ public class Player extends Sprite {
                 float targetRotation = Math.round(rotation / 90f) * 90f;
                 setRotation(MathUtils.lerp(rotation, targetRotation, 0.2f));
             }
-        }
-        else if (movementStrategy instanceof ShipStrategy) {
+        } else if (movementStrategy instanceof ShipStrategy) {
             // Ship: Miring sesuai arah vertikal
             float targetRotation = MathUtils.clamp(velocityY * 3.0f, -45, 45);
             setRotation(MathUtils.lerp(getRotation(), targetRotation, 0.1f));
-        }
-        else if (movementStrategy instanceof BallStrategy) {
+        } else if (movementStrategy instanceof BallStrategy) {
             float gravity = b2body.getGravityScale();
             float rotationSpeed = 600f;
-            if (gravity > 0) rotate(-rotationSpeed * dt);
-            else rotate(rotationSpeed * dt);
-        }
-        else if (movementStrategy instanceof UfoStrategy) {
+            if (gravity > 0)
+                rotate(-rotationSpeed * dt);
+            else
+                rotate(rotationSpeed * dt);
+        } else if (movementStrategy instanceof UfoStrategy) {
             float targetRotation = velocityY * 2.0f;
             targetRotation = MathUtils.clamp(targetRotation, -20, 20);
             setRotation(MathUtils.lerp(getRotation(), targetRotation, 0.1f));
-        }
-        else if (movementStrategy instanceof WaveStrategy) {
+        } else if (movementStrategy instanceof WaveStrategy) {
             float targetRotation = 0;
-            if (velocityY > 0.1f) targetRotation = 45f;
-            else if (velocityY < -0.1f) targetRotation = -45f;
+            if (velocityY > 0.1f)
+                targetRotation = 45f;
+            else if (velocityY < -0.1f)
+                targetRotation = -45f;
             setRotation(MathUtils.lerp(getRotation(), targetRotation, 0.3f));
-        }
-        else if (movementStrategy instanceof RobotStrategy) {
+        } else if (movementStrategy instanceof RobotStrategy) {
             // Robot: Selalu tegak
             setRotation(0);
         }
@@ -205,8 +228,7 @@ public class Player extends Sprite {
 
             // Pastikan rotasi 0 agar berdiri tegak
             setRotation(0);
-        }
-        else {
+        } else {
             setRotation(0);
         }
     }
@@ -225,7 +247,7 @@ public class Player extends Sprite {
         BodyDef bdef = new BodyDef();
         bdef.position.set(32 / Constants.PPM, 64 / Constants.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
-        bdef.fixedRotation = true;  // Rotasi dihandle manual (visual only)
+        bdef.fixedRotation = true; // Rotasi dihandle manual (visual only)
 
         b2body = world.createBody(bdef);
 
@@ -242,19 +264,80 @@ public class Player extends Sprite {
         shape.dispose();
     }
 
-    @Override public void draw(Batch batch) { super.draw(batch); }
-
-    public void dispose() {
-        if (cubeTexture != null) cubeTexture.dispose();
-        if (shipTexture != null) shipTexture.dispose();
-        if (ballTexture != null) ballTexture.dispose();
-        if (ufoTexture != null) ufoTexture.dispose();
-        if (waveTexture != null) waveTexture.dispose();
-        if (robotTexture != null) robotTexture.dispose();
-        if (spiderTexture != null) spiderTexture.dispose();
+    @Override
+    public void draw(Batch batch) {
+        super.draw(batch);
     }
 
-    public MovementStrategy getStrategy() { return movementStrategy; }
-    public static float getMovementSpeed() { return MOVEMENT_SPEED; }
-    public static float getJumpForce() { return JUMP_FORCE; }
+    public void dispose() {
+        if (cubeTexture != null)
+            cubeTexture.dispose();
+        if (shipTexture != null)
+            shipTexture.dispose();
+        if (ballTexture != null)
+            ballTexture.dispose();
+        if (ufoTexture != null)
+            ufoTexture.dispose();
+        if (waveTexture != null)
+            waveTexture.dispose();
+        if (robotTexture != null)
+            robotTexture.dispose();
+        if (spiderTexture != null)
+            spiderTexture.dispose();
+    }
+
+    public MovementStrategy getStrategy() {
+        return movementStrategy;
+    }
+
+    public static float getMovementSpeed() {
+        return MOVEMENT_SPEED;
+    }
+
+    public float getCurrentSpeed() {
+        return MOVEMENT_SPEED * currentSpeedMultiplier;
+    }
+
+    public void setSpeedMultiplier(float multiplier) {
+        this.currentSpeedMultiplier = multiplier;
+        // Force update velocity instantly to handle slow-down case (since friction is
+        // 0)
+        if (b2body != null) {
+            Vector2 vel = b2body.getLinearVelocity();
+            b2body.setLinearVelocity(getCurrentSpeed(), vel.y);
+        }
+    }
+
+    public boolean isGravityReversed() {
+        return isGravityReversed;
+    }
+
+    public void setGravityReversed(boolean reversed) {
+        this.isGravityReversed = reversed;
+        updateGravityScale();
+    }
+
+    private void updateGravityScale() {
+        float baseScale = Math.abs(b2body.getGravityScale());
+        // Jika mode Wave, gravity 0
+        if (movementStrategy instanceof WaveStrategy) {
+            baseScale = 0;
+        } else if (movementStrategy instanceof ShipStrategy) {
+            baseScale = 0.5f;
+        } else if (movementStrategy instanceof UfoStrategy) {
+            baseScale = 0.5f;
+        } else {
+            baseScale = 1.0f;
+        }
+
+        if (isGravityReversed) {
+            b2body.setGravityScale(-baseScale);
+        } else {
+            b2body.setGravityScale(baseScale);
+        }
+    }
+
+    public static float getJumpForce() {
+        return JUMP_FORCE;
+    }
 }

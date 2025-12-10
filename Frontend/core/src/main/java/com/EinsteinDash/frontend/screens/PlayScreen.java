@@ -207,7 +207,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
             targetX = minX;
 
         // Lerp untuk gerakan kamera yang halus
-        float lerpFactor = 0.1f;
+        // FIX: Gunakan lerp 1.0f (instant) untuk X agar tidak ada lag saat speed tinggi
+        // sehingga posisi player tetap konsisten di layar.
+        float lerpFactor = 1.0f;
         gameCam.position.x += (targetX - gameCam.position.x) * lerpFactor;
         gameCam.position.y = gamePort.getWorldHeight() / 3;
         gameCam.update();

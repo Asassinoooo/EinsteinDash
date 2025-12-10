@@ -19,16 +19,23 @@ public class UfoStrategy implements MovementStrategy {
     public void update(Player player, float dt) {
         // Auto-run ke kanan
         Vector2 vel = player.b2body.getLinearVelocity();
-        if (vel.x < player.getMovementSpeed()) {
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
+        if (vel.x < player.getCurrentSpeed()) {
+            player.b2body.setLinearVelocity(player.getCurrentSpeed(), vel.y);
         }
 
-        // 2. Gravitasi Normal
-        player.b2body.setGravityScale(0.5f);
+        // REMOVED: player.b2body.setGravityScale(0.5f); -> Handled by Player state
 
-        // Batasi kecepatan agar tidak tembus ceiling
-        if (vel.y > MAX_UFO_VELOCITY) {
-            player.b2body.setLinearVelocity(vel.x, MAX_UFO_VELOCITY);
+        // Batasi kecepatan Y agar tidak terlalu ekstrim (Symmetric Clamping)
+        // Normal Gravity: Batasi kecepatan naik (Jumping)
+        // Reverse Gravity: Batasi kecepatan turun (Jumping)
+        if (!player.isGravityReversed()) {
+            if (vel.y > MAX_UFO_VELOCITY) {
+                player.b2body.setLinearVelocity(vel.x, MAX_UFO_VELOCITY);
+            }
+        } else {
+            if (vel.y < -MAX_UFO_VELOCITY) {
+                player.b2body.setLinearVelocity(vel.x, -MAX_UFO_VELOCITY);
+            }
         }
     }
 
@@ -36,17 +43,19 @@ public class UfoStrategy implements MovementStrategy {
     public void handleInput(Player player) {
         // UFO bisa lompat di udara (tidak perlu di tanah)
         boolean isJumpPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
-            Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
-            Gdx.input.justTouched();
+                Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
+                Gdx.input.justTouched();
 
         if (isJumpPressed) {
             // Reset velocity Y untuk lompatan konsisten
             player.b2body.setLinearVelocity(player.b2body.getLinearVelocity().x, 0);
+
+            float jumpForce = player.isGravityReversed() ? -UFO_JUMP_FORCE : UFO_JUMP_FORCE;
+
             player.b2body.applyLinearImpulse(
-                new Vector2(0, UFO_JUMP_FORCE),
-                player.b2body.getWorldCenter(),
-                true
-            );
+                    new Vector2(0, jumpForce),
+                    player.b2body.getWorldCenter(),
+                    true);
         }
     }
 }

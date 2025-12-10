@@ -39,7 +39,8 @@ public class WorldContactListener implements ContactListener {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
 
-        if (!isPlayer(fixA) && !isPlayer(fixB)) return;
+        if (!isPlayer(fixA) && !isPlayer(fixB))
+            return;
 
         // Identifikasi fixture player vs other
         Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
@@ -71,17 +72,57 @@ public class WorldContactListener implements ContactListener {
 
     /** Handle portal: ubah mode player */
     private void handlePortalContact(Portal portal, Object playerData) {
-        if (!(playerData instanceof Player)) return;
+        if (!(playerData instanceof Player))
+            return;
         Player player = (Player) playerData;
 
         switch (portal.getType()) {
-            case "PORTAL_CUBE":   player.setStrategy(new CubeStrategy()); break;
-            case "PORTAL_SHIP":   player.setStrategy(new ShipStrategy()); break;
-            case "PORTAL_BALL":   player.setStrategy(new BallStrategy()); break;
-            case "PORTAL_UFO":    player.setStrategy(new UfoStrategy()); break;
-            case "PORTAL_WAVE":   player.setStrategy(new WaveStrategy()); break;
-            case "PORTAL_ROBOT":  player.setStrategy(new RobotStrategy()); break;
-            case "PORTAL_SPIDER": player.setStrategy(new SpiderStrategy()); break;
+            case "PORTAL_CUBE":
+                player.setStrategy(new CubeStrategy());
+                break;
+            case "PORTAL_SHIP":
+                player.setStrategy(new ShipStrategy());
+                break;
+            case "PORTAL_BALL":
+                player.setStrategy(new BallStrategy());
+                break;
+            case "PORTAL_UFO":
+                player.setStrategy(new UfoStrategy());
+                break;
+            case "PORTAL_WAVE":
+                player.setStrategy(new WaveStrategy());
+                break;
+            case "PORTAL_ROBOT":
+                player.setStrategy(new RobotStrategy());
+                break;
+            case "PORTAL_SPIDER":
+                player.setStrategy(new SpiderStrategy());
+                break;
+
+            // GRAVITY HANDLER
+            case "PORTAL_GRAVITY_UP":
+                player.setGravityReversed(true);
+                break;
+            case "PORTAL_GRAVITY_DOWN":
+                player.setGravityReversed(false);
+                break;
+
+            // SPEED HANDLER
+            case "PORTAL_SPEED_0_5":
+                player.setSpeedMultiplier(Constants.SPEED_HALF);
+                break;
+            case "PORTAL_SPEED_1":
+                player.setSpeedMultiplier(Constants.SPEED_NORMAL);
+                break;
+            case "PORTAL_SPEED_2":
+                player.setSpeedMultiplier(Constants.SPEED_DOUBLE);
+                break;
+            case "PORTAL_SPEED_3":
+                player.setSpeedMultiplier(Constants.SPEED_TRIPLE);
+                break;
+            case "PORTAL_SPEED_4":
+                player.setSpeedMultiplier(Constants.SPEED_QUAD);
+                break;
         }
     }
 
@@ -89,7 +130,8 @@ public class WorldContactListener implements ContactListener {
     private void handleCoinContact(Coin coin) {
         if (!coin.isCollected()) {
             coin.collect();
-            for (GameObserver o : observers) o.onCoinCollected();
+            for (GameObserver o : observers)
+                o.onCoinCollected();
         }
     }
 
@@ -114,7 +156,8 @@ public class WorldContactListener implements ContactListener {
 
     /** Handle contact dengan benda padat (Block/Floor/Ceiling) */
     private void handleSolidContact(String type, Fixture playerFix, Fixture otherFix, Object playerData) {
-        if (!(playerData instanceof Player)) return;
+        if (!(playerData instanceof Player))
+            return;
         Player player = (Player) playerData;
         MovementStrategy strategy = player.getStrategy();
 
@@ -141,9 +184,9 @@ public class WorldContactListener implements ContactListener {
             }
             // --- Ball, Ship, Spider, UFO: cek side collision ---
             else if (strategy instanceof BallStrategy ||
-                     strategy instanceof ShipStrategy ||
-                     strategy instanceof SpiderStrategy ||
-                     strategy instanceof UfoStrategy) {
+                    strategy instanceof ShipStrategy ||
+                    strategy instanceof SpiderStrategy ||
+                    strategy instanceof UfoStrategy) {
                 if (checkSideCollision(playerFix.getBody(), otherFix.getBody())) {
                     System.out.println("CRASH SIDE! (Mode: " + strategy.getClass().getSimpleName() + ")");
                     notifyPlayerDied();
@@ -166,7 +209,8 @@ public class WorldContactListener implements ContactListener {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
 
-        if (!isPlayer(fixA) && !isPlayer(fixB)) return;
+        if (!isPlayer(fixA) && !isPlayer(fixB))
+            return;
 
         Fixture playerFix = isPlayer(fixA) ? fixA : fixB;
         Fixture otherFix = isPlayer(fixA) ? fixB : fixA;
@@ -187,11 +231,35 @@ public class WorldContactListener implements ContactListener {
 
     /** Cek apakah player menabrak dinding (bukan mendarat di atas) */
     private boolean checkWallCollision(Body playerBody, Body blockBody) {
-        float playerBottom = playerBody.getPosition().y - (15 / Constants.PPM);
-        float blockTop = blockBody.getPosition().y + (16 / Constants.PPM);
+        Object userData = playerBody.getUserData();
+        boolean isGravityReversed = false;
+        if (userData instanceof Player) {
+            isGravityReversed = ((Player) userData).isGravityReversed();
+        }
+
+        // float playerBottom = playerBody.getPosition().y - (15 / Constants.PPM);
+        float playerY = playerBody.getPosition().y;
+        float blockY = blockBody.getPosition().y;
+
+        float playerHalfHeight = 15 / Constants.PPM;
+        float blockHalfHeight = 16 / Constants.PPM;
         float tolerance = 0.05f;
 
-        return playerBottom < blockTop - tolerance;
+        if (!isGravityReversed) {
+            // GRAVITASI NORMAL (Jatuh ke bawah)
+            // Aman jika: Player Bottom >= Block Top (Mendarat di atas)
+            // Mati jika: Player Bottom < Block Top (Nabrak samping/bawah)
+            float playerBottom = playerY - playerHalfHeight;
+            float blockTop = blockY + blockHalfHeight;
+            return playerBottom < blockTop - tolerance;
+        } else {
+            // GRAVITASI TERBALIK (Jatuh ke atas)
+            // Aman jika: Player Top <= Block Bottom (Mendarat di bawah block/ceiling)
+            // Mati jika: Player Top > Block Bottom (Nabrak samping/atas)
+            float playerTop = playerY + playerHalfHeight;
+            float blockBottom = blockY - blockHalfHeight;
+            return playerTop > blockBottom + tolerance;
+        }
     }
 
     /** Cek tabrakan samping (untuk mode Ball/Ship/UFO/Spider) */
@@ -217,13 +285,20 @@ public class WorldContactListener implements ContactListener {
     }
 
     private void notifyPlayerDied() {
-        for (GameObserver o : observers) o.onPlayerDied();
+        for (GameObserver o : observers)
+            o.onPlayerDied();
     }
 
     private void notifyLevelCompleted() {
-        for (GameObserver o : observers) o.onLevelCompleted();
+        for (GameObserver o : observers)
+            o.onLevelCompleted();
     }
 
-    @Override public void preSolve(Contact contact, Manifold oldManifold) {}
-    @Override public void postSolve(Contact contact, ContactImpulse impulse) {}
+    @Override
+    public void preSolve(Contact contact, Manifold oldManifold) {
+    }
+
+    @Override
+    public void postSolve(Contact contact, ContactImpulse impulse) {
+    }
 }
