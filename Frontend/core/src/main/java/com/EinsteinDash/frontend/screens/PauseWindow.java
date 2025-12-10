@@ -80,13 +80,13 @@ public class PauseWindow extends Window {
         add(volLabel).padTop(30).row();
 
         final Slider volumeSlider = new Slider(0.0f, 1.0f, 0.1f, false, skin);
-        volumeSlider.setValue(game.getMusicVolume());
+        volumeSlider.setValue(game.getAudioManager().getVolume());
         add(volumeSlider).width(300).padTop(5).row();
 
         volumeSlider.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.setMusicVolume(volumeSlider.getValue());
+                game.getAudioManager().setVolume(volumeSlider.getValue());
             }
         });
     }

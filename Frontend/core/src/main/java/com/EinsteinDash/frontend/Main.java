@@ -1,5 +1,6 @@
 package com.EinsteinDash.frontend;
 
+import com.EinsteinDash.frontend.audio.AudioManager;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.screens.LoginScreen;
 import com.badlogic.gdx.Game;
@@ -10,7 +11,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 /**
  * Main - Entry point game EinsteinDash.
- * Pattern: Singleton (hanya 1 instance Game yang aktif).
  */
 public class Main extends Game {
 
@@ -19,17 +19,21 @@ public class Main extends Game {
     public AssetManager assets;     // Manager untuk load/unload asset
     public BackendFacade backend;   // Facade komunikasi ke REST API
 
-    // === SETTINGS ===
-    private float musicVolume;      // Volume musik (0.0 - 1.0)
+    // === MANAGERS ===
+    private AudioManager audioManager;  // Manager untuk audio/music
 
     // ==================== LIFECYCLE ====================
 
     @Override
     public void create() {
-        // Inisialisasi resources
+        // Inisialisasi shared resources
         batch = new SpriteBatch();
         assets = new AssetManager();
         backend = new BackendFacade();
+
+        // Inisialisasi managers
+        audioManager = new AudioManager();
+        audioManager.loadAllTracks();
 
         // Load UI skin
         assets.load("uiskin.json", Skin.class, new SkinLoader.SkinParameter("uiskin.atlas"));
@@ -41,23 +45,23 @@ public class Main extends Game {
 
     @Override
     public void render() {
-        super.render(); // Delegasi ke screen aktif
+        super.render();  // Delegasi ke screen aktif
     }
 
     @Override
     public void dispose() {
         batch.dispose();
         assets.dispose();
+        audioManager.dispose();
     }
 
-    // ==================== MUSIC SETTINGS ====================
+    // ==================== GETTERS ====================
 
-    public float getMusicVolume() {
-        return this.musicVolume;
-    }
-
-    public void setMusicVolume(float vol) {
-        this.musicVolume = vol;
-        // TODO: Update volume musik yang sedang diputar
+    /**
+     * Get AudioManager untuk kontrol music dan sound effects.
+     * @return AudioManager instance
+     */
+    public AudioManager getAudioManager() {
+        return audioManager;
     }
 }

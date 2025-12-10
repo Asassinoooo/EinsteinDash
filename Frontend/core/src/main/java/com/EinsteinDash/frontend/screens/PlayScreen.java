@@ -5,7 +5,12 @@ import com.EinsteinDash.frontend.input.InputHandler;
 import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.scenes.Hud;
-import com.EinsteinDash.frontend.utils.*;
+import com.EinsteinDash.frontend.utils.Constants;
+import com.EinsteinDash.frontend.utils.GameObserver;
+import com.EinsteinDash.frontend.utils.LevelFactory;
+import com.EinsteinDash.frontend.utils.Player;
+import com.EinsteinDash.frontend.utils.Session;
+import com.EinsteinDash.frontend.utils.WorldContactListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -105,6 +110,11 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(null);  // Input dihandle manual
+
+        // Play music dari awal setiap kali level dimulai/restart/player mati
+        if (levelData != null) {
+            game.getAudioManager().playFromStart(levelData.getAudioTrackId());
+        }
     }
 
     // ==================== RENDER ====================
@@ -227,6 +237,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         if (isLevelFinished) return;
         isLevelFinished = true;
 
+        // Stop music saat level complete
+        game.getAudioManager().stop();
+
         int userId = Session.getInstance().getUserId();
         boolean wasCompletedBefore = levelData.isCompleted();
         int coinsBefore = levelData.getCoinsCollected();
@@ -274,6 +287,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     public void pauseGame() {
         currentState = State.PAUSED;
 
+        // Pause music
+        game.getAudioManager().pause();
+
         // Tampilkan pause window
         Skin skin = game.assets.get("uiskin.json", Skin.class);
         PauseWindow pauseWindow = new PauseWindow(game, this, skin);
@@ -283,6 +299,10 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     public void resumeGame() {
         currentState = State.RUNNING;
+
+        // Resume music
+        game.getAudioManager().resume();
+
         Gdx.input.setInputProcessor(null);  // Kembalikan ke game input
     }
 
@@ -300,6 +320,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     @Override
     public void dispose() {
+        // Stop music saat keluar dari level
+        game.getAudioManager().stop();
+
         world.dispose();
         b2dr.dispose();
         player.dispose();
