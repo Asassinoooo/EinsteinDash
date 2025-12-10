@@ -286,6 +286,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     public void pauseGame() {
         currentState = State.PAUSED;
 
+        // Pause music saat game di-pause
+        game.getAudioManager().pause();
+
         Skin skin = game.assets.get("uiskin.json", Skin.class);
         PauseWindow pauseWindow = new PauseWindow(game, this, skin);
 
