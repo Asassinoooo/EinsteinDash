@@ -76,7 +76,7 @@ public class LeaderboardScreen extends ScreenAdapter {
         // Layout
         rootTable.add(title).padBottom(20).row();
         rootTable.add(statusLabel).padBottom(10).row();
-        rootTable.add(scrollPane).width(600).height(400).padBottom(20).row();
+        rootTable.add(scrollPane).width(800).height(500).padBottom(20).row(); // Wider and Taller
         rootTable.add(backButton).width(200).height(50).row();
 
         stage.addActor(rootTable);
@@ -105,43 +105,51 @@ public class LeaderboardScreen extends ScreenAdapter {
     private void populateTable(JsonValue data) {
         leaderboardTable.clear();
 
-        // Header
-        leaderboardTable.add(new Label("RANK", skin)).width(100).pad(10);
-        leaderboardTable.add(new Label("USERNAME", skin)).width(300).pad(10);
-        leaderboardTable.add(new Label("STARS", skin)).width(100).pad(10);
+        // Header - Adjusted widths to sum to ~750-800
+        leaderboardTable.add(new Label("RANK", skin)).width(80).pad(10);
+        leaderboardTable.add(new Label("USERNAME", skin)).width(350).pad(10); // Wider username
+        leaderboardTable.add(new Label("STARS", skin)).width(120).pad(10);
+        leaderboardTable.add(new Label("COINS", skin)).width(120).pad(10);
         leaderboardTable.row();
 
         // Divider
-        leaderboardTable.add(new Image(skin.newDrawable("white", Color.GRAY)))
-            .colspan(3).height(2).fillX().padBottom(10).row();
+        leaderboardTable.add(new Image(skin.newDrawable("white", GamePalette.Neon.CYAN))) // Cyan separator
+                .colspan(4).height(3).fillX().padBottom(15).row();
 
         int rank = 1;
         for (JsonValue user : data) {
             String username = user.getString("username");
             int stars = user.getInt("totalStars");
+            int coins = user.getInt("totalCoins", 0); // Default 0
 
             // Rank color: gold, silver, bronze
             Color rankColor = Color.WHITE;
-            if (rank == 1) rankColor = GamePalette.Bright.GOLD;
-            else if (rank == 2) rankColor = GamePalette.Bright.SILVER;
-            else if (rank == 3) rankColor = GamePalette.Neon.ORANGE;
+            if (rank == 1)
+                rankColor = GamePalette.Bright.GOLD;
+            else if (rank == 2)
+                rankColor = GamePalette.Bright.SILVER;
+            else if (rank == 3)
+                rankColor = GamePalette.Neon.ORANGE;
 
             Label rankLabel = new Label("#" + rank, skin);
             Label nameLabel = new Label(username, skin);
             Label scoreLabel = new Label(String.valueOf(stars), skin);
+            Label coinLabel = new Label(String.valueOf(coins), skin);
 
             rankLabel.setColor(rankColor);
-            nameLabel.setColor(rankColor);
-            scoreLabel.setColor(rankColor);
+            nameLabel.setColor(Color.WHITE); // Username white for readability
+            scoreLabel.setColor(GamePalette.Neon.YELLOW); // Stars Yellow
+            coinLabel.setColor(GamePalette.Bright.GOLD); // Coins Gold
 
             leaderboardTable.add(rankLabel).pad(5);
             leaderboardTable.add(nameLabel).left().pad(5);
             leaderboardTable.add(scoreLabel).right().pad(5);
+            leaderboardTable.add(coinLabel).right().pad(5);
             leaderboardTable.row();
 
             // Row divider
             leaderboardTable.add(new Image(skin.newDrawable("white", GamePalette.Dark.SLATE)))
-                .colspan(3).height(1).fillX().padBottom(5).row();
+                    .colspan(4).height(1).fillX().padBottom(5).row(); // colspan 3 -> 4
 
             rank++;
         }

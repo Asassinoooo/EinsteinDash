@@ -55,7 +55,10 @@ public class MenuScreen extends ScreenAdapter {
         Label userLabel = new Label("Welcome, " + session.getUsername() + "!", skin);
 
         Label starsLabel = new Label("Total Stars: " + session.getTotalStars(), skin);
-        starsLabel.setColor(1, 0.8f, 0, 1);  // Yellow
+        starsLabel.setColor(1, 0.8f, 0, 1); // Yellow
+
+        Label coinsLabel = new Label("Total Coins: " + session.getTotalCoins(), skin);
+        coinsLabel.setColor(GamePalette.Bright.GOLD);
 
         // Buttons
         TextButton playButton = new TextButton("PLAY LEVELS", skin);
@@ -71,7 +74,8 @@ public class MenuScreen extends ScreenAdapter {
         // Layout
         table.add(titleLabel).colspan(2).padBottom(40).row();
         table.add(userLabel).colspan(2).padBottom(10).row();
-        table.add(starsLabel).colspan(2).padBottom(30).row();
+        table.add(starsLabel).colspan(2).padBottom(10).row(); // Reduced padding
+        table.add(coinsLabel).colspan(2).padBottom(30).row(); // Added coins row
         table.add(playButton).width(200).height(50).padBottom(20).padRight(10);
         table.add(leaderboardButton).width(200).height(50).padBottom(20).padLeft(10).row();
         table.add(logoutButton).width(200).height(50).padBottom(20).padRight(10);
@@ -113,7 +117,7 @@ public class MenuScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.3f, 1);  // Dark blue background
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.3f, 1); // Dark blue background
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act(delta);
         stage.draw();
