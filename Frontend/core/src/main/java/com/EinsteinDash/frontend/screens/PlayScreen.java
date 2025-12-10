@@ -52,6 +52,9 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
     // === BOX2D PHYSICS ===
     private World world;
     private Box2DDebugRenderer b2dr;
+    
+    // === RENDERING ===
+    private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
 
     // === GAME OBJECTS ===
     private LevelFactory levelFactory;
@@ -81,6 +84,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Buat world dengan gravitasi tinggi (gameplay cepat)
         world = new World(new Vector2(0, -26f), true);
         b2dr = new Box2DDebugRenderer();
+        shapeRenderer = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
 
         // Setup collision listener
         WorldContactListener contactListener = new WorldContactListener();
@@ -128,6 +132,13 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Clear screen
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        
+        // Render Effects (Trail) - BEFORE Sprites
+        // Note: ShapeRenderer has its own matrix handling
+        shapeRenderer.setProjectionMatrix(gameCam.combined);
+        shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled); // Use Filled for rectLine
+        player.drawTrail(shapeRenderer);
+        shapeRenderer.end();
 
         // Render game objects
         game.batch.setProjectionMatrix(gameCam.combined);
