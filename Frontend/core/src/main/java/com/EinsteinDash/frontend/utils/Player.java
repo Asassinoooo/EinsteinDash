@@ -1,12 +1,23 @@
 package com.EinsteinDash.frontend.utils;
 
+import com.EinsteinDash.frontend.strategies.BallStrategy;
+import com.EinsteinDash.frontend.strategies.CubeStrategy;
+import com.EinsteinDash.frontend.strategies.MovementStrategy;
+import com.EinsteinDash.frontend.strategies.RobotStrategy;
+import com.EinsteinDash.frontend.strategies.ShipStrategy;
+import com.EinsteinDash.frontend.strategies.SpiderStrategy;
+import com.EinsteinDash.frontend.strategies.UfoStrategy;
+import com.EinsteinDash.frontend.strategies.WaveStrategy;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.*;
-import com.EinsteinDash.frontend.strategies.*;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
 
 public class Player extends Sprite {
 

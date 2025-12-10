@@ -1,7 +1,7 @@
 package com.EinsteinDash.frontend.scenes;
 
-import com.EinsteinDash.frontend.utils.Constants;
-import com.EinsteinDash.frontend.screens.PauseWindow; // Pastikan import ini
+import com.EinsteinDash.frontend.screens.PauseWindow;
+import com.EinsteinDash.frontend.utils.Constants; // Pastikan import ini
 import com.EinsteinDash.frontend.utils.GamePalette;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
