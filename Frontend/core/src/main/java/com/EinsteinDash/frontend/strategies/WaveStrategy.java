@@ -23,13 +23,21 @@ public class WaveStrategy implements MovementStrategy {
 
         // Tentukan arah berdasarkan input
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
-            Gdx.input.isKeyPressed(Input.Keys.UP) ||
-            Gdx.input.isTouched();
+                Gdx.input.isKeyPressed(Input.Keys.UP) ||
+                Gdx.input.isTouched();
 
-        float targetVelocityY = isHolding ? WAVE_SPEED : -WAVE_SPEED;
+        // Logic arah Wave (Hold = Naik, Release = Turun)
+        // Jika Gravity Reversed (Hold = Turun, Release = Naik)
+        boolean goUp = isHolding;
+        if (player.isGravityReversed())
+            goUp = !goUp;
+
+        // Agar sudut 45 derajat, speed vertical == speed horizontal
+        float waveSpeed = player.getCurrentSpeed();
+        float targetVelocityY = goUp ? waveSpeed : -waveSpeed;
 
         // Set velocity langsung (bukan force) untuk kontrol presisi
-        player.b2body.setLinearVelocity(player.getMovementSpeed(), targetVelocityY);
+        player.b2body.setLinearVelocity(player.getCurrentSpeed(), targetVelocityY);
     }
 
     @Override

@@ -11,8 +11,8 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class SpiderStrategy implements MovementStrategy {
 
-    private static final float TELEPORT_SPEED = 100.0f;  // Kecepatan tinggi (simulasi teleport)
-    private static final float BUFFER_COOLDOWN = 0.1f;   // Cooldown anti-spam
+    private static final float TELEPORT_SPEED = 100.0f; // Kecepatan tinggi (simulasi teleport)
+    private static final float BUFFER_COOLDOWN = 0.1f; // Cooldown anti-spam
 
     private float bufferTimer = 0;
 
@@ -20,18 +20,19 @@ public class SpiderStrategy implements MovementStrategy {
     public void update(Player player, float dt) {
         // Auto-run ke kanan
         Vector2 vel = player.b2body.getLinearVelocity();
-        if (vel.x < player.getMovementSpeed()) {
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
+        if (vel.x < player.getCurrentSpeed()) {
+            player.b2body.setLinearVelocity(player.getCurrentSpeed(), vel.y);
         }
 
-        if (bufferTimer > 0) bufferTimer -= dt;
+        if (bufferTimer > 0)
+            bufferTimer -= dt;
     }
 
     @Override
     public void handleInput(Player player) {
         boolean isPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
-            Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
-            Gdx.input.justTouched();
+                Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
+                Gdx.input.justTouched();
 
         if (isPressed && player.isOnGround() && bufferTimer <= 0) {
             float currentGravity = player.b2body.getGravityScale();

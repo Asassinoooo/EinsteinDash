@@ -30,27 +30,37 @@ public class LevelFactory {
 
     private final Pool<Block> blockPool = new Pool<Block>() {
         @Override
-        protected Block newObject() { return new Block(); }
+        protected Block newObject() {
+            return new Block();
+        }
     };
 
     private final Pool<Spike> spikePool = new Pool<Spike>() {
         @Override
-        protected Spike newObject() { return new Spike(); }
+        protected Spike newObject() {
+            return new Spike();
+        }
     };
 
     private final Pool<Goal> goalPool = new Pool<Goal>() {
         @Override
-        protected Goal newObject() { return new Goal(); }
+        protected Goal newObject() {
+            return new Goal();
+        }
     };
 
     private final Pool<Coin> coinPool = new Pool<Coin>() {
         @Override
-        protected Coin newObject() { return new Coin(); }
+        protected Coin newObject() {
+            return new Coin();
+        }
     };
 
     private final Pool<Portal> portalPool = new Pool<Portal>() {
         @Override
-        protected Portal newObject() { return new Portal(); }
+        protected Portal newObject() {
+            return new Portal();
+        }
     };
 
     // === ACTIVE OBJECTS ===
@@ -72,11 +82,12 @@ public class LevelFactory {
 
     /** Parse JSON dan buat semua objek level */
     public void createLevel(String jsonLevelData) {
-        freeAll();  // Bersihkan level lama
+        freeAll(); // Bersihkan level lama
         createFloor(0f);
         createCeiling(2.15f);
 
-        if (jsonLevelData == null || jsonLevelData.isEmpty()) return;
+        if (jsonLevelData == null || jsonLevelData.isEmpty())
+            return;
 
         JsonValue root = new JsonReader().parse(jsonLevelData);
 
@@ -179,11 +190,16 @@ public class LevelFactory {
     public void draw(SpriteBatch batch) {
         drawFloorAndCeiling(batch);
 
-        for (Block block : activeBlocks) block.draw(batch);
-        for (Spike spike : activeSpikes) spike.draw(batch);
-        for (Goal goal : activeGoals) goal.draw(batch);
-        for (Coin coin : activeCoins) coin.draw(batch);
-        for (Portal portal : activePortals) portal.draw(batch);
+        for (Block block : activeBlocks)
+            block.draw(batch);
+        for (Spike spike : activeSpikes)
+            spike.draw(batch);
+        for (Goal goal : activeGoals)
+            goal.draw(batch);
+        for (Coin coin : activeCoins)
+            coin.draw(batch);
+        for (Portal portal : activePortals)
+            portal.draw(batch);
     }
 
     /** Gambar floor dan ceiling dengan texture looping */
@@ -195,17 +211,15 @@ public class LevelFactory {
 
         // Floor
         batch.draw(floorTexture,
-            startX, currentFloorY + FLOOR_VISUAL_OFFSET,
-            totalWidth, height,
-            0, 0, repeatX, 1
-        );
+                startX, currentFloorY + FLOOR_VISUAL_OFFSET,
+                totalWidth, height,
+                0, 0, repeatX, 1);
 
         // Ceiling (flipped)
         batch.draw(floorTexture,
-            startX, currentCeilingY,
-            totalWidth, height,
-            0, 1, repeatX, 0
-        );
+                startX, currentCeilingY,
+                totalWidth, height,
+                0, 1, repeatX, 0);
     }
 
     // ==================== CLEANUP ====================

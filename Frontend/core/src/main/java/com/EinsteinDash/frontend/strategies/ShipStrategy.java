@@ -19,26 +19,27 @@ public class ShipStrategy implements MovementStrategy {
     public void update(Player player, float dt) {
         // Auto-run ke kanan
         Vector2 vel = player.b2body.getLinearVelocity();
-        if (vel.x < player.getMovementSpeed()) {
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), vel.y);
+        if (vel.x < player.getCurrentSpeed()) {
+            player.b2body.setLinearVelocity(player.getCurrentSpeed(), vel.y);
         }
 
-        player.b2body.setGravityScale(SHIP_GRAVITY_SCALE);
+        // REMOVED setGravityScale -> Handled by Player state
 
         // Terbang ke atas saat tombol ditahan
         boolean isHolding = Gdx.input.isTouched() ||
-            Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
-            Gdx.input.isKeyPressed(Input.Keys.UP);
+                Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
+                Gdx.input.isKeyPressed(Input.Keys.UP);
 
         if (isHolding) {
-            player.b2body.applyForceToCenter(0, SHIP_UPWARD_FORCE, true);
+            float thrustForce = player.isGravityReversed() ? -SHIP_UPWARD_FORCE : SHIP_UPWARD_FORCE;
+            player.b2body.applyForceToCenter(0, thrustForce, true);
         }
 
         // Batasi kecepatan vertikal
         float currentVelY = player.b2body.getLinearVelocity().y;
         if (Math.abs(currentVelY) > MAX_VERTICAL_SPEED) {
             float clampedY = Math.signum(currentVelY) * MAX_VERTICAL_SPEED;
-            player.b2body.setLinearVelocity(player.getMovementSpeed(), clampedY);
+            player.b2body.setLinearVelocity(player.getCurrentSpeed(), clampedY);
         }
     }
 
