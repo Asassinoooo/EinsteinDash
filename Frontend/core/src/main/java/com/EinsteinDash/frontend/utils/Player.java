@@ -26,7 +26,8 @@ public class Player extends Sprite {
     public Body b2body;
 
     // === MOVEMENT CONFIG ===
-    private static final float MOVEMENT_SPEED = 3f; // Kecepatan horizontal (auto-run)
+    // === MOVEMENT CONFIG ===
+    private static final float MOVEMENT_SPEED = 1.0f; // Unit scalar, actual speed in multiplier
     private static final float JUMP_FORCE = 6.5f; // Kekuatan lompat
 
     // === STRATEGY PATTERN ===
@@ -50,7 +51,7 @@ public class Player extends Sprite {
 
     // === GRAVITY & SPEED STATE ===
     private boolean isGravityReversed = false;
-    private float currentSpeedMultiplier = 1.0f;
+    private float currentSpeedMultiplier = Constants.SPEED_NORMAL;
 
     // ==================== CONSTRUCTOR ====================
 
