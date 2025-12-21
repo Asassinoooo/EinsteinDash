@@ -3,6 +3,7 @@ package com.EinsteinDash.frontend.screens;
 import java.util.ArrayList;
 
 import com.EinsteinDash.frontend.Main;
+import com.EinsteinDash.frontend.background.GeneralBackgroundAnimation; // Refactored import
 import com.EinsteinDash.frontend.model.LevelDto;
 import com.EinsteinDash.frontend.model.ProgressDto;
 import com.EinsteinDash.frontend.network.BackendFacade;
@@ -38,7 +39,7 @@ public class LevelSelectScreen extends ScreenAdapter {
     private Table contentTable;
     private TextButton backButton;
     private ShapeRenderer shapeRenderer;
-    private LevelSelectBackgroundAnimation backgroundAnimation;
+    private GeneralBackgroundAnimation backgroundAnimation; // Refactored Type
 
     // List untuk melacak tombol level buat render outline saat hover
     private final ArrayList<TextButton> levelButtons = new ArrayList<>();
@@ -58,8 +59,8 @@ public class LevelSelectScreen extends ScreenAdapter {
         skin = game.assets.get("ui/uiskin.json", Skin.class);
         shapeRenderer = new ShapeRenderer();
 
-        // Inisialisasi animasi background
-        backgroundAnimation = new LevelSelectBackgroundAnimation(game);
+        // Inisialisasi animasi background (Refactored)
+        backgroundAnimation = new GeneralBackgroundAnimation(game);
 
         setupUI();
         loadLevels();
@@ -90,7 +91,7 @@ public class LevelSelectScreen extends ScreenAdapter {
         }
 
         // Styling Tombol Back: Warna dasar biru
-        backButton = new TextButton("BACK", skin);
+        backButton = new TextButton("BACK TO MENU", skin);
         backButton.setColor(GamePalette.Neon.BLUE);
         
         // Listener Klik Custom untuk efek klik lebih gelap

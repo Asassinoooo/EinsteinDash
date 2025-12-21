@@ -1,4 +1,4 @@
-package com.EinsteinDash.frontend.screens;
+package com.EinsteinDash.frontend.background;
 
 import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.utils.Constants;
@@ -8,7 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
 
-public class LevelSelectBackgroundAnimation implements Disposable {
+public class GeneralBackgroundAnimation implements Disposable {
 
     private final Main game;
     private Texture bgTexture;
@@ -24,10 +24,11 @@ public class LevelSelectBackgroundAnimation implements Disposable {
 
     // UFO (Top Right)
     // Adjusted: Left 20px more, Down 20px more -> (V_WIDTH - 170 - 20, V_HEIGHT - 170 - 20)
+    // Final: Left 40px total, Down 90px total from original
     private final Vector2 ufoPos = new Vector2(Constants.V_WIDTH - 190, Constants.V_HEIGHT - 190);
     private final Vector2 ufoStartPos = new Vector2(Constants.V_WIDTH - 190, Constants.V_HEIGHT - 190);
 
-    public LevelSelectBackgroundAnimation(Main game) {
+    public GeneralBackgroundAnimation(Main game) {
         this.game = game;
         loadTextures();
     }

@@ -110,11 +110,17 @@ public class MenuScreen extends ScreenAdapter {
 
         // Buttons Layout Logic
         if (session.isGuest()) {
-            // GUEST: Centered Single Column
+            // GUEST: Centered Single Column for Play, Row for Logout/Exit
             table.add(playButton).width(200).height(50).padBottom(20).colspan(2).row();
+            
             // Leaderboard hidden
-            table.add(logoutButton).width(200).height(50).padBottom(20).colspan(2).row();
-            table.add(exitButton).width(200).height(50).padBottom(20).colspan(2).row();
+            
+            // Logout and Exit side-by-side
+            Table guestBtnTable = new Table();
+            guestBtnTable.add(logoutButton).width(200).height(50).padBottom(20).padRight(10);
+            guestBtnTable.add(exitButton).width(200).height(50).padBottom(20).padLeft(10);
+            
+            table.add(guestBtnTable).colspan(2).row();
         } else {
             // LOGGED IN: Side-by-Side
             // Use a separate table for buttons to keep centering easy
