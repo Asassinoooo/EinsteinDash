@@ -143,6 +143,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Render game objects
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
+        game.batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // FIX: Reset color to prevent tinting from previous frame (HUD)
         player.draw(game.batch);
         levelFactory.draw(game.batch);
         game.batch.end();
@@ -318,7 +319,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
 
     /** Tampilkan popup level completed */
     private void showCompletedWindow(int starsEarned, int coinsEarned) {
-        Skin skin = game.assets.get("uiskin.json", Skin.class);
+        Skin skin = game.assets.get("ui/uiskin.json", Skin.class);
         LevelCompletedWindow win = new LevelCompletedWindow(
                 game, skin, levelData, starsEarned, coinsEarned, currentRunCoins);
         hud.stage.addActor(win);
@@ -334,7 +335,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Pause music saat game di-pause
         game.getAudioManager().pause();
 
-        Skin skin = game.assets.get("uiskin.json", Skin.class);
+        Skin skin = game.assets.get("ui/uiskin.json", Skin.class);
         PauseWindow pauseWindow = new PauseWindow(game, this, skin);
 
         // GUNAKAN METHOD BARU DI HUD UNTUK MENYIMPAN REFERENSI

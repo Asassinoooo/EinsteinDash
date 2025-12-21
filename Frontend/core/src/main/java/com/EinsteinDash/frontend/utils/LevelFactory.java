@@ -74,7 +74,7 @@ public class LevelFactory {
 
     public LevelFactory(World world) {
         this.world = world;
-        this.floorTexture = new Texture("floor.png");
+        this.floorTexture = new Texture("game/floor.png");
         this.floorTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
     }
 

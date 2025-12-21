@@ -30,7 +30,7 @@ public class Block implements Pool.Poolable {
     public Block() {
         this.active = false;
         if (BLOCK_TEXTURE == null) {
-            BLOCK_TEXTURE = new Texture("block.png");
+            BLOCK_TEXTURE = new Texture("game/block.png");
         }
         this.texture = BLOCK_TEXTURE;
     }

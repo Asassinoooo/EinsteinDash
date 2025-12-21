@@ -36,7 +36,7 @@ public class Main extends Game {
         audioManager.loadAllTracks();
 
         // Load UI skin
-        assets.load("uiskin.json", Skin.class, new SkinLoader.SkinParameter("uiskin.atlas"));
+        assets.load("ui/uiskin.json", Skin.class, new SkinLoader.SkinParameter("ui/uiskin.atlas"));
         assets.finishLoading();
 
         // Tampilkan layar login sebagai starting screen

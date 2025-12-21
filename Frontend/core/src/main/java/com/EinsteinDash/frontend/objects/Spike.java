@@ -31,7 +31,7 @@ public class Spike implements Pool.Poolable {
     public Spike() {
         this.active = false;
         if (SPIKE_TEXTURE == null) {
-            SPIKE_TEXTURE = new Texture("spike.png");
+            SPIKE_TEXTURE = new Texture("game/spike.png");
         }
         this.texture = SPIKE_TEXTURE;
     }

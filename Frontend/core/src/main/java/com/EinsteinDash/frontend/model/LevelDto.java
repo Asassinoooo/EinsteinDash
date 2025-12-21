@@ -14,6 +14,8 @@ public class LevelDto {
     private int audioTrackId;
     private boolean iscompleted;
     private int coinsCollected;
+    private int percentage; // Added for progress tracking
+
 
     /** Default constructor untuk JSON parsing */
     public LevelDto() {
@@ -57,6 +59,14 @@ public class LevelDto {
 
     public void setCoinsCollected(int coinsCollected) {
         this.coinsCollected = coinsCollected;
+    }
+
+    public int getPercentage() {
+        return percentage;
+    }
+
+    public void setPercentage(int percentage) {
+        this.percentage = percentage;
     }
 
     public void setId(int id) {
