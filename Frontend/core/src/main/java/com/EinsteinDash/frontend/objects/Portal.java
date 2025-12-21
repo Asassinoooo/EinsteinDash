@@ -35,6 +35,15 @@ public class Portal implements Pool.Poolable {
     private static Texture ROBOT_PORTAL_TEXTURE;
     private static Texture SPIDER_PORTAL_TEXTURE;
 
+    // === NEW PORTAL TEXTURES ===
+    private static Texture GRAVITY_NORMAL_TEXTURE;
+    private static Texture GRAVITY_REVERSE_TEXTURE;
+    private static Texture SPEED_0_5_TEXTURE;
+    private static Texture SPEED_1_TEXTURE;
+    private static Texture SPEED_2_TEXTURE;
+    private static Texture SPEED_3_TEXTURE;
+    private static Texture SPEED_4_TEXTURE;
+
     // ==================== CONSTRUCTOR ====================
 
     public Portal() {
@@ -58,6 +67,23 @@ public class Portal implements Pool.Poolable {
             ROBOT_PORTAL_TEXTURE = new Texture("portal/portal_robot.png");
         if (SPIDER_PORTAL_TEXTURE == null)
             SPIDER_PORTAL_TEXTURE = new Texture("portal/portal_spider.png");
+
+        // NEW TEXTURES
+        if (GRAVITY_NORMAL_TEXTURE == null)
+            GRAVITY_NORMAL_TEXTURE = new Texture("portal/portal_normal_gravity.png");
+        if (GRAVITY_REVERSE_TEXTURE == null)
+            GRAVITY_REVERSE_TEXTURE = new Texture("portal/portal_reverse_gravity.png");
+
+        if (SPEED_0_5_TEXTURE == null)
+            SPEED_0_5_TEXTURE = new Texture("portal/portal_0.5x_speed.png");
+        if (SPEED_1_TEXTURE == null)
+            SPEED_1_TEXTURE = new Texture("portal/portal_1x_speed.png");
+        if (SPEED_2_TEXTURE == null)
+            SPEED_2_TEXTURE = new Texture("portal/portal_2x_speed.png");
+        if (SPEED_3_TEXTURE == null)
+            SPEED_3_TEXTURE = new Texture("portal/portal_3x_speed.png");
+        if (SPEED_4_TEXTURE == null)
+            SPEED_4_TEXTURE = new Texture("portal/portal_4x_speed.png");
     }
 
     // ==================== INITIALIZATION ====================
@@ -88,22 +114,29 @@ public class Portal implements Pool.Poolable {
                 this.texture = SPIDER_PORTAL_TEXTURE;
                 break;
 
-            // GRAVITY PORTAL (Reuse Cube Texture but tinted later if possible, or just
-            // same)
+            // GRAVITY PORTAL
             case "PORTAL_GRAVITY_UP":
-                this.texture = CUBE_PORTAL_TEXTURE;
+                this.texture = GRAVITY_REVERSE_TEXTURE; // Up is reverse gravity
                 break;
             case "PORTAL_GRAVITY_DOWN":
-                this.texture = CUBE_PORTAL_TEXTURE;
+                this.texture = GRAVITY_NORMAL_TEXTURE; // Down is normal gravity
                 break;
 
-            // SPEED PORTAL (Reuse Ship Texture)
+            // SPEED PORTAL
             case "PORTAL_SPEED_0_5":
+                this.texture = SPEED_0_5_TEXTURE;
+                break;
             case "PORTAL_SPEED_1":
+                this.texture = SPEED_1_TEXTURE;
+                break;
             case "PORTAL_SPEED_2":
+                this.texture = SPEED_2_TEXTURE;
+                break;
             case "PORTAL_SPEED_3":
+                this.texture = SPEED_3_TEXTURE;
+                break;
             case "PORTAL_SPEED_4":
-                this.texture = SHIP_PORTAL_TEXTURE;
+                this.texture = SPEED_4_TEXTURE;
                 break;
 
             default:
@@ -145,36 +178,22 @@ public class Portal implements Pool.Poolable {
         if (!active)
             return;
 
-        float width = 20 / Constants.PPM;
         float height = 80 / Constants.PPM;
+        // Calculate width dynamically based on texture aspect ratio
+        float aspect = (float) texture.getWidth() / texture.getHeight();
+        float width = height * aspect;
 
-        // Reset warna untuk menghindari tint dari object sebelumnya
-        Color oldColor = batch.getColor();
+        // Reset warna agar texture tidak ter-tint warna dari object sebelumnya
+        Color oldColor = new Color(batch.getColor());
         batch.setColor(Color.WHITE);
 
-        // TINTING UNTUK PORTAL BARU (Agar pemain bisa membedakan)
-        if (type.equals("PORTAL_GRAVITY_UP"))
-            batch.setColor(Color.ORANGE);
-        else if (type.equals("PORTAL_GRAVITY_DOWN"))
-            batch.setColor(Color.BLUE);
-        else if (type.startsWith("PORTAL_SPEED")) {
-            if (type.endsWith("0_5"))
-                batch.setColor(Color.ORANGE);
-            else if (type.endsWith("1"))
-                batch.setColor(Color.WHITE);
-            else if (type.endsWith("2"))
-                batch.setColor(Color.GREEN);
-            else if (type.endsWith("3"))
-                batch.setColor(Color.MAGENTA);
-            else if (type.endsWith("4"))
-                batch.setColor(Color.RED);
-        }
-
+        // Draw portal
         batch.draw(texture,
                 body.getPosition().x - width / 2,
                 body.getPosition().y - height / 2,
                 width, height);
 
+        // Kembalikan ke warna semula
         batch.setColor(oldColor);
     }
 
