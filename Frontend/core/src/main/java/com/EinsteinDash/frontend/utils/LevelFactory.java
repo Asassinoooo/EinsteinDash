@@ -84,7 +84,7 @@ public class LevelFactory {
     public void createLevel(String jsonLevelData) {
         freeAll(); // Bersihkan level lama
         createFloor(0f);
-        createCeiling(2.15f);
+        createCeiling(2.225f);
 
         if (jsonLevelData == null || jsonLevelData.isEmpty())
             return;

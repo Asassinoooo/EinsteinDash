@@ -2,6 +2,7 @@ package com.EinsteinDash.frontend.screens;
 
 import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.background.MenuBackgroundAnimation; // Refactored import
+import com.EinsteinDash.frontend.network.BackendFacade;
 import com.EinsteinDash.frontend.utils.Constants;
 import com.EinsteinDash.frontend.utils.GamePalette;
 import com.EinsteinDash.frontend.utils.Session;
@@ -36,6 +37,10 @@ public class MenuScreen extends ScreenAdapter {
     private TextButton logoutButton;
     private TextButton exitButton;
 
+    // Labels (Promoted to fields for update)
+    private Label starsLabel;
+    private Label coinsLabel;
+
     public MenuScreen(Main game) {
         this.game = game;
     }
@@ -51,6 +56,7 @@ public class MenuScreen extends ScreenAdapter {
         shapeRenderer = new ShapeRenderer();
 
         setupUI();
+        updateUserData();
     }
 
     /** Setup UI layout */
@@ -72,11 +78,11 @@ public class MenuScreen extends ScreenAdapter {
         userLabel.setFontScale(2.0f);
         userLabel.setColor(1, 0, 1, 1); // Neon Magenta (Purple) requested
 
-        Label starsLabel = new Label("Stars: " + session.getTotalStars(), skin);
+        starsLabel = new Label("Stars: " + session.getTotalStars(), skin);
         starsLabel.setFontScale(1.0f);
         starsLabel.setColor(1, 1, 0, 1); // Neon Yellow
 
-        Label coinsLabel = new Label("Coins: " + session.getTotalCoins(), skin);
+        coinsLabel = new Label("Coins: " + session.getTotalCoins(), skin);
         coinsLabel.setFontScale(1.0f);
         coinsLabel.setColor(1, 1, 0, 1); // Neon Yellow
 
@@ -164,6 +170,26 @@ public class MenuScreen extends ScreenAdapter {
                 Gdx.app.exit();
             }
         });
+    }
+
+    private void updateUserData() {
+        Session session = Session.getInstance();
+        if (session.isLoggedIn() && !session.isGuest()) {
+            game.backend.fetchUserData(session.getUserId(), new BackendFacade.UserDataCallback() {
+                @Override
+                public void onSuccess(int stars, int coins) {
+                    if (starsLabel != null)
+                        starsLabel.setText("Stars: " + stars);
+                    if (coinsLabel != null)
+                        coinsLabel.setText("Coins: " + coins);
+                }
+
+                @Override
+                public void onFailed(String errorMessage) {
+                    Gdx.app.error("MENU", "Failed to update user data: " + errorMessage);
+                }
+            });
+        }
     }
 
     // ==================== RENDER & DISPOSE ====================
