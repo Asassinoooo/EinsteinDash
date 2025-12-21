@@ -40,6 +40,11 @@ public class GameService {
         return user;
     }
 
+    public User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     // --- LEVEL MANAGEMENT ---
     @Transactional(readOnly = true)
     public List<Level> getAllLevels() {

@@ -41,6 +41,16 @@ public class ApiController {
         }
     }
 
+    // 2.5 Get User Data
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(gameService.getUser(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     // 3. Get All Levels (List Level)
     @GetMapping("/levels")
     public List<Level> getLevels() {

@@ -95,6 +95,32 @@ public class DataSeeder {
                 l2.setAudioTrackId(102);
                 repository.save(l2);
 
+                Level l3 = repository.findByLevelName("Ship Challenge").orElse(new Level());
+                l3.setLevelName("Ship Challenge");
+                l3.setLevelData("""
+                            [
+                                {"type": "PORTAL_SHIP", "x": 5, "y": 1},
+                                
+                                {"type": "SPIKE", "x": 15, "y": 0},
+                                {"type": "SPIKE_UPSIDE", "x": 15, "y": 5},
+                                {"type": "BLOCK", "x": 15, "y": 6},
+                                
+                                {"type": "SPIKE", "x": 20, "y": 0},
+                                {"type": "SPIKE_UPSIDE", "x": 20, "y": 6},
+                                
+                                {"type": "SPIKE", "x": 25, "y": 0},
+                                {"type": "SPIKE_UPSIDE", "x": 25, "y": 6},
+                                
+                                {"type": "SPIKE", "x": 30, "y": 0},
+                                {"type": "SPIKE_UPSIDE", "x": 30, "y": 6},
+                                
+                                {"type": "GOAL", "x": 40, "y": 3}
+                            ]
+                        """);
+                l3.setStars(3); // Harder
+                l3.setAudioTrackId(1001);
+                repository.save(l3);
+
                 System.out.println("Dummy levels created!");
             }
         };

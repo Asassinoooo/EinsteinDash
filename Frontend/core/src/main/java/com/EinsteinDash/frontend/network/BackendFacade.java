@@ -59,6 +59,12 @@ public class BackendFacade {
         void onFailed(String error);
     }
 
+    public interface UserDataCallback {
+        void onSuccess(int stars, int coins);
+
+        void onFailed(String errorMessage);
+    }
+
     // ==================== AUTHENTICATION ====================
 
     /** Login user dan simpan data ke Session */
@@ -269,6 +275,45 @@ public class BackendFacade {
             @Override
             public void failed(Throwable t) {
                 Gdx.app.postRunnable(() -> callback.onFailed(t.getMessage()));
+            }
+
+            @Override
+            public void cancelled() {
+            }
+        });
+    }
+
+    public void fetchUserData(int userId, final UserDataCallback callback) {
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+        Net.HttpRequest httpRequest = requestBuilder.newRequest()
+                .method(Net.HttpMethods.GET)
+                .url(Constants.BASE_URL + "/user/" + userId)
+                .build();
+
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                int statusCode = httpResponse.getStatus().getStatusCode();
+                String responseString = httpResponse.getResultAsString();
+
+                if (statusCode == 200) {
+                    JsonValue root = new JsonReader().parse(responseString);
+                    int stars = root.getInt("totalStars");
+                    int coins = root.getInt("totalCoins");
+
+                    // Update Session
+                    Session session = Session.getInstance();
+                    session.setUserData(userId, session.getUsername(), stars, coins);
+
+                    Gdx.app.postRunnable(() -> callback.onSuccess(stars, coins));
+                } else {
+                    Gdx.app.postRunnable(() -> callback.onFailed("Error: " + statusCode));
+                }
+            }
+
+            @Override
+            public void failed(Throwable t) {
+                Gdx.app.postRunnable(() -> callback.onFailed("Connection Error"));
             }
 
             @Override
