@@ -7,6 +7,7 @@ import com.EinsteinDash.frontend.utils.Session;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -25,6 +26,14 @@ public class MenuScreen extends ScreenAdapter {
     private final Main game;
     private Stage stage;
     private Skin skin;
+    private MenuBackgroundAnimation backgroundAnimation;
+    private ShapeRenderer shapeRenderer;
+
+    // Buttons (Promoted to fields for hover check)
+    private TextButton playButton;
+    private TextButton leaderboardButton;
+    private TextButton logoutButton;
+    private TextButton exitButton;
 
     public MenuScreen(Main game) {
         this.game = game;
@@ -36,7 +45,9 @@ public class MenuScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-        skin = game.assets.get("uiskin.json", Skin.class);
+        skin = game.assets.get("ui/uiskin.json", Skin.class);
+        backgroundAnimation = new MenuBackgroundAnimation(game);
+        shapeRenderer = new ShapeRenderer();
 
         setupUI();
     }
@@ -45,52 +56,75 @@ public class MenuScreen extends ScreenAdapter {
     private void setupUI() {
         Table table = new Table();
         table.setFillParent(true);
+        // User requested text moved up 50px, but buttons stay.
+        // 1. Move everything up 50px (280 -> 230)
+        table.padTop(230);
 
         Session session = Session.getInstance();
 
         // Labels
         Label titleLabel = new Label("MAIN MENU", skin);
-        titleLabel.setFontScale(2);
+        titleLabel.setFontScale(2.5f); // Larger
+        titleLabel.setColor(0, 1, 1, 1); // Neon Cyan
 
         Label userLabel = new Label("Welcome, " + session.getUsername() + "!", skin);
+        userLabel.setFontScale(2.0f);
+        userLabel.setColor(1, 0, 1, 1); // Neon Magenta (Purple) requested
 
-        Label starsLabel = new Label("Total Stars: " + session.getTotalStars(), skin);
-        starsLabel.setColor(1, 0.8f, 0, 1); // Yellow
+        Label starsLabel = new Label("Stars: " + session.getTotalStars(), skin);
+        starsLabel.setFontScale(1.0f);
+        starsLabel.setColor(1, 1, 0, 1); // Neon Yellow
 
-        Label coinsLabel = new Label("Total Coins: " + session.getTotalCoins(), skin);
-        coinsLabel.setColor(GamePalette.Bright.GOLD);
+        Label coinsLabel = new Label("Coins: " + session.getTotalCoins(), skin);
+        coinsLabel.setFontScale(1.0f);
+        coinsLabel.setColor(1, 1, 0, 1); // Neon Yellow
 
-        // Buttons
-        TextButton playButton = new TextButton("PLAY LEVELS", skin);
-        TextButton leaderboardButton = new TextButton("LEADERBOARD", skin);
-        TextButton logoutButton = new TextButton("LOGOUT", skin);
-        TextButton exitButton = new TextButton("EXIT", skin);
+        // Buttons (Fields)
+        playButton = new TextButton("PLAY LEVELS", skin);
+        leaderboardButton = new TextButton("LEADERBOARD", skin);
+        logoutButton = new TextButton("LOGOUT", skin);
+        exitButton = new TextButton("EXIT", skin);
 
         playButton.setColor(GamePalette.Neon.LIME);
         leaderboardButton.setColor(GamePalette.Neon.YELLOW);
-        logoutButton.setColor(GamePalette.Bright.SKY);
+        logoutButton.setColor(GamePalette.Neon.CYAN); // Changed from Bright.SKY to Neon.CYAN
         exitButton.setColor(GamePalette.Neon.RED);
 
         // Layout
-        table.add(titleLabel).colspan(2).padBottom(40).row();
+        // Row 1: Title
+        table.add(titleLabel).colspan(2).padBottom(5).row(); 
+
+        // Row 2: Welcome (Moved to own row)
         table.add(userLabel).colspan(2).padBottom(10).row();
-        table.add(starsLabel).colspan(2).padBottom(10).row(); // Reduced padding
-        table.add(coinsLabel).colspan(2).padBottom(30).row(); // Added coins row
+
+        // Row 3: Stats (Stars | Gap | Coins)
+        Table statsTable = new Table();
+        statsTable.add(starsLabel);
+        // Add spacer gap roughly size of "Welcome..." text. 
+        // Since we don't calculate exact text bounds easily here, we use a fixed width 
+        // that approximates the visual gap user liked (~200px or so based on scale 2.0 font).
+        statsTable.add().width(300); 
+        statsTable.add(coinsLabel);
+
+        table.add(statsTable).colspan(2).padBottom(150).row();
 
         // Buttons Layout Logic
         if (session.isGuest()) {
             // GUEST: Centered Single Column
-            table.add(playButton).width(200).height(50).padBottom(20).row();
+            table.add(playButton).width(200).height(50).padBottom(20).colspan(2).row();
             // Leaderboard hidden
-            table.add(logoutButton).width(200).height(50).padBottom(20).row();
-            table.add(exitButton).width(200).height(50).padBottom(20).row();
+            table.add(logoutButton).width(200).height(50).padBottom(20).colspan(2).row();
+            table.add(exitButton).width(200).height(50).padBottom(20).colspan(2).row();
         } else {
             // LOGGED IN: Side-by-Side
-            table.add(playButton).width(200).height(50).padBottom(20).padRight(10);
-            table.add(leaderboardButton).width(200).height(50).padBottom(20).padLeft(10).row();
+            // Use a separate table for buttons to keep centering easy
+            Table btnTable = new Table();
+            btnTable.add(playButton).width(200).height(50).padBottom(20).padRight(10);
+            btnTable.add(leaderboardButton).width(200).height(50).padBottom(20).padLeft(10).row();
+            btnTable.add(logoutButton).width(200).height(50).padBottom(20).padRight(10);
+            btnTable.add(exitButton).width(200).height(50).padBottom(20).padLeft(10).row();
 
-            table.add(logoutButton).width(200).height(50).padBottom(20).padRight(10);
-            table.add(exitButton).width(200).height(50).padBottom(20).padLeft(10).row();
+            table.add(btnTable).colspan(2).row();
         }
 
         stage.addActor(table);
@@ -129,10 +163,50 @@ public class MenuScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.3f, 1); // Dark blue background
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1); // Black background
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if (backgroundAnimation != null) {
+            backgroundAnimation.render(delta, game.batch);
+        }
+
         stage.act(delta);
         stage.draw();
+
+        // Draw Neon Outline on Hover
+        drawHoverOutline(playButton, GamePalette.Neon.LIME);
+        drawHoverOutline(leaderboardButton, GamePalette.Neon.YELLOW);
+        drawHoverOutline(logoutButton, GamePalette.Neon.CYAN); // Matches new button color
+        drawHoverOutline(exitButton, GamePalette.Neon.RED);
+    }
+
+    private void drawHoverOutline(TextButton button, com.badlogic.gdx.graphics.Color color) {
+        if (button.isOver()) {
+            shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(color);
+            // Draw multiple lines for thickness/glow
+            float x = button.getX();
+            float y = button.getY();
+            float w = button.getWidth();
+            float h = button.getHeight();
+
+            // Parent coordinates (Table) might affect X/Y if not using localToStageCoordinates
+            // Screen is FitViewport, Input is Stage driven. button.getX() is local to parent table if taking part in layout?
+            // Yes, standard buttons in a table need coordinate transformation.
+            // Let's rely on button.localToStageCoordinates.
+
+            com.badlogic.gdx.math.Vector2 start = button.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(0, 0));
+
+            for(int i=0; i<3; i++) {
+                 shapeRenderer.rect(start.x - i, start.y - i, w + i*2, h + i*2);
+            }
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        }
     }
 
     @Override
@@ -142,6 +216,9 @@ public class MenuScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
+        if (backgroundAnimation != null) {
+            backgroundAnimation.dispose();
+        }
         stage.dispose();
     }
 }

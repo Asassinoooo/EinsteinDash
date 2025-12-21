@@ -45,19 +45,19 @@ public class Portal implements Pool.Poolable {
     /** Load semua texture portal (sekali saja) */
     private void loadTextures() {
         if (SHIP_PORTAL_TEXTURE == null)
-            SHIP_PORTAL_TEXTURE = new Texture("portal_ship.png");
+            SHIP_PORTAL_TEXTURE = new Texture("portal/portal_ship.png");
         if (CUBE_PORTAL_TEXTURE == null)
-            CUBE_PORTAL_TEXTURE = new Texture("portal_cube.png");
+            CUBE_PORTAL_TEXTURE = new Texture("portal/portal_cube.png");
         if (BALL_PORTAL_TEXTURE == null)
-            BALL_PORTAL_TEXTURE = new Texture("portal_ball.png");
+            BALL_PORTAL_TEXTURE = new Texture("portal/portal_ball.png");
         if (UFO_PORTAL_TEXTURE == null)
-            UFO_PORTAL_TEXTURE = new Texture("portal_ufo.png");
+            UFO_PORTAL_TEXTURE = new Texture("portal/portal_ufo.png");
         if (WAVE_PORTAL_TEXTURE == null)
-            WAVE_PORTAL_TEXTURE = new Texture("portal_wave.png");
+            WAVE_PORTAL_TEXTURE = new Texture("portal/portal_wave.png");
         if (ROBOT_PORTAL_TEXTURE == null)
-            ROBOT_PORTAL_TEXTURE = new Texture("portal_robot.png");
+            ROBOT_PORTAL_TEXTURE = new Texture("portal/portal_robot.png");
         if (SPIDER_PORTAL_TEXTURE == null)
-            SPIDER_PORTAL_TEXTURE = new Texture("portal_spider.png");
+            SPIDER_PORTAL_TEXTURE = new Texture("portal/portal_spider.png");
     }
 
     // ==================== INITIALIZATION ====================

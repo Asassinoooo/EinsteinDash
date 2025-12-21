@@ -32,7 +32,7 @@ public class Coin implements Pool.Poolable {
         this.active = false;
         this.isCollected = false;
         if (COIN_TEXTURE == null) {
-            COIN_TEXTURE = new Texture("coin.png");
+            COIN_TEXTURE = new Texture("game/coin.png");
         }
         this.texture = COIN_TEXTURE;
     }

@@ -15,6 +15,7 @@ public class LevelDto {
     private boolean iscompleted;
     private int coinsCollected;
 
+
     /** Default constructor untuk JSON parsing */
     public LevelDto() {
     }

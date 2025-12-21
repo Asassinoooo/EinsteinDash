@@ -77,17 +77,17 @@ public class Player extends Sprite {
         waveTrail = new com.badlogic.gdx.utils.Array<>();
 
         // Load semua texture
-        cubeTexture = new Texture("player_cube.png");
-        shipTexture = new Texture("player_ship.png");
-        ballTexture = new Texture("player_ball.png");
-        ufoTexture = new Texture("player_ufo.png");
-        waveTexture = new Texture("player_wave.png");
-        robotTexture = new Texture("player_robot.png");
+        cubeTexture = new Texture("player/player_cube.png");
+        shipTexture = new Texture("player/player_ship.png");
+        ballTexture = new Texture("player/player_ball.png");
+        ufoTexture = new Texture("player/player_ufo.png");
+        waveTexture = new Texture("player/player_wave.png");
+        robotTexture = new Texture("player/player_robot.png");
 
         // Load 3 frame animasi spider
-        spiderTexture1 = new Texture("player_spider1.png");
-        spiderTexture2 = new Texture("player_spider2.png");
-        spiderTexture3 = new Texture("player_spider3.png");
+        spiderTexture1 = new Texture("player/player_spider1.png");
+        spiderTexture2 = new Texture("player/player_spider2.png");
+        spiderTexture3 = new Texture("player/player_spider3.png");
 
         // Buat Animation dari 3 frame
         TextureRegion[] spiderFrames = new TextureRegion[] {

@@ -39,7 +39,7 @@ public class RegisterScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-        skin = game.assets.get("uiskin.json", Skin.class);
+        skin = game.assets.get("ui/uiskin.json", Skin.class);
 
         setupUI();
     }

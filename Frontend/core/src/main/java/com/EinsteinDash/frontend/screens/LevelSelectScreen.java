@@ -10,7 +10,6 @@ import com.EinsteinDash.frontend.utils.Constants;
 import com.EinsteinDash.frontend.utils.Session;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -43,7 +42,7 @@ public class LevelSelectScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new FitViewport(Constants.V_WIDTH, Constants.V_HEIGHT));
         Gdx.input.setInputProcessor(stage);
-        skin = game.assets.get("uiskin.json", Skin.class);
+        skin = game.assets.get("ui/uiskin.json", Skin.class);
 
         setupUI();
         loadLevels();
@@ -55,7 +54,7 @@ public class LevelSelectScreen extends ScreenAdapter {
         mainTable.setFillParent(true);
 
         Label titleLabel = new Label("SELECT LEVEL", skin);
-        titleLabel.setFontScale(2);
+        titleLabel.setFontScale(2.0f);
 
         contentTable = new Table();
         ScrollPane scrollPane = new ScrollPane(contentTable, skin);
@@ -69,12 +68,12 @@ public class LevelSelectScreen extends ScreenAdapter {
         });
 
         mainTable.add(titleLabel).pad(20).row();
-        mainTable.add(scrollPane).width(800).height(400).pad(10).row();
+        mainTable.add(scrollPane).width(600).height(400).pad(10).row();
         mainTable.add(backButton).width(200).height(50).pad(20).row();
 
         stage.addActor(mainTable);
     }
-
+    
     // ==================== DATA LOADING ====================
 
     /** Load levels dan sync dengan progress dari database */
@@ -120,13 +119,10 @@ public class LevelSelectScreen extends ScreenAdapter {
 
     /** Sync progress dari database lalu tampilkan levels */
     private void syncProgressAndDisplay(final ArrayList<LevelDto> levels) {
-        // Jika GUEST, tidak perlu fetch progress ke server.
-        // Langsung tampilkan level apa adanya (default: locked/0 stars)
-        // Atau ambil dari Session.localProgress jika ingin fitur "guest progress
-        // sementara"
+        // GUEST Handling...
         if (Session.getInstance().isGuest()) {
             contentTable.clear();
-            displayLevels(levels); // Method baru helper
+            displayLevels(levels);
             return;
         }
 
@@ -137,13 +133,13 @@ public class LevelSelectScreen extends ScreenAdapter {
             @Override
             public void onSuccess(ArrayList<ProgressDto> progressList) {
                 contentTable.clear();
-
-                // Merge progress dengan level data
+                // Merge
                 for (LevelDto level : levels) {
                     for (ProgressDto prog : progressList) {
                         if (prog.getLevelId() == level.getId()) {
                             level.setCompleted(prog.isCompleted());
                             level.setCoinsCollected(prog.getCoinsCollected());
+                            // Removed percentage logic as requested revert
                             Session.getInstance().saveLocalProgress(level.getId(), prog.getCoinsCollected());
                             break;
                         }
@@ -156,7 +152,6 @@ public class LevelSelectScreen extends ScreenAdapter {
             public void onFailed(String error) {
                 contentTable.clear();
                 contentTable.add(new Label("Failed to sync: " + error, skin));
-                // Tetap tampilkan level meski sync gagal (fallback local progress)
                 displayLevels(levels);
             }
         });
@@ -164,25 +159,19 @@ public class LevelSelectScreen extends ScreenAdapter {
 
     /** Helper untuk menampilkan tombol level */
     private void displayLevels(ArrayList<LevelDto> levels) {
-        for (LevelDto level : levels) {
-            // Cek local progress juga sebagai cadangan
+        float btnWidth = 500;
+        float btnHeight = 60;
+
+        for (final LevelDto level : levels) {
+            String btnText = level.getLevelName();
             if (Session.getInstance().isLevelCompleted(level.getId())) {
-                level.setCompleted(true);
-            }
-            int bestCoins = Session.getInstance().getLevelBestCoins(level.getId());
-            if (bestCoins > level.getCoinsCollected()) {
-                level.setCoinsCollected(bestCoins);
+                level.setCompleted(true); // Check local session consistency
+                btnText += " (Completed)";
             }
 
-            // Create button
-            String btnText = level.getLevelName() + " (" + level.getStars() + " Stars)";
             TextButton levelBtn = new TextButton(btnText, skin);
-            levelBtn.getLabel().setFontScale(1.2f);
-
-            if (level.isCompleted()) {
-                levelBtn.setColor(Color.LIME);
-            }
-
+            
+            // Revert to basic click listener
             levelBtn.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -190,7 +179,7 @@ public class LevelSelectScreen extends ScreenAdapter {
                 }
             });
 
-            contentTable.add(levelBtn).width(600).height(70).pad(10).row();
+            contentTable.add(levelBtn).width(btnWidth).height(btnHeight).pad(5).row();
         }
     }
 
@@ -198,8 +187,10 @@ public class LevelSelectScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        // Basic render check (standard background clear)
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         stage.act(delta);
         stage.draw();
     }
