@@ -3,6 +3,7 @@ package com.EinsteinDash.frontend.objects;
 import com.EinsteinDash.frontend.utils.Constants;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -25,6 +26,7 @@ public class Spike implements Pool.Poolable {
     private Texture texture;
     private boolean active;
     private static Texture SPIKE_TEXTURE;
+    private boolean isUpsideDown;
 
     // ==================== CONSTRUCTOR ====================
 
@@ -38,10 +40,15 @@ public class Spike implements Pool.Poolable {
 
     // ==================== INITIALIZATION ====================
 
-    public void init(World world, float x, float y) {
+    public void init(World world, float x, float y, boolean isUpsideDown) {
         this.world = world;
         this.active = true;
+        this.isUpsideDown = isUpsideDown;
         defineBody(x, y);
+    }
+
+    public void init(World world, float x, float y) {
+        init(world, x, y, false);
     }
 
     /** Buat Box2D sensor (tembus, hanya deteksi collision) */
@@ -49,6 +56,13 @@ public class Spike implements Pool.Poolable {
         BodyDef bdef = new BodyDef();
         bdef.position.set((x * 32 + 16) / Constants.PPM, (y * 32 + 16) / Constants.PPM);
         bdef.type = BodyDef.BodyType.StaticBody;
+
+        if (isUpsideDown) {
+            bdef.angle = (float) Math.PI; // Rotasi 180 derajat (Radian)
+        } else {
+            bdef.angle = 0;
+        }
+
         body = world.createBody(bdef);
 
         // Hitbox segitiga (lebih kecil dari visual)
@@ -74,13 +88,24 @@ public class Spike implements Pool.Poolable {
     // ==================== RENDERING ====================
 
     public void draw(SpriteBatch batch) {
-        if (!active) return;
+        if (!active || body == null) return;
 
         float visualSize = (32 / Constants.PPM) * 1.6f;
+        float originXY = visualSize / 2;
+
+        float rotationDegrees = MathUtils.radiansToDegrees * body.getAngle();
+
         batch.draw(texture,
-            body.getPosition().x - visualSize / 2,
-            body.getPosition().y - visualSize / 2,
-            visualSize, visualSize);
+            body.getPosition().x - originXY,
+            body.getPosition().y - originXY,
+            originXY, originXY,
+            visualSize, visualSize,
+            1, 1,
+            rotationDegrees,
+            0, 0,
+            texture.getWidth(), texture.getHeight(),
+            false, false
+        );
     }
 
     // ==================== POOL RESET ====================
@@ -92,5 +117,6 @@ public class Spike implements Pool.Poolable {
             body = null;
         }
         this.active = false;
+        this.isUpsideDown = false;
     }
 }
