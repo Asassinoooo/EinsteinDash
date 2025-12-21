@@ -1,6 +1,7 @@
 package com.EinsteinDash.frontend.screens;
 
 import com.EinsteinDash.frontend.Main;
+import com.EinsteinDash.frontend.background.MenuBackgroundAnimation; // Refactored import
 import com.EinsteinDash.frontend.utils.Constants;
 import com.EinsteinDash.frontend.utils.GamePalette;
 import com.EinsteinDash.frontend.utils.Session;

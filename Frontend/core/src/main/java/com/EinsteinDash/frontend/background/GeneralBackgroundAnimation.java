@@ -45,8 +45,8 @@ public class GeneralBackgroundAnimation implements Disposable {
         update(delta);
 
         batch.begin();
-        // 1. Main Background - Lowered 70px
-        batch.draw(bgTexture, 0, -70, Constants.V_WIDTH, Constants.V_HEIGHT);
+        // 1. Main Background - Lowered 80px to match MenuScreen
+        batch.draw(bgTexture, 0, -80, Constants.V_WIDTH, Constants.V_HEIGHT);
 
         // 2. Animated Elements
         // Ship (Top Left) - Scaled 2x (80x50 -> 160x100)

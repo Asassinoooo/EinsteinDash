@@ -1,4 +1,4 @@
-package com.EinsteinDash.frontend.screens;
+package com.EinsteinDash.frontend.background;
 
 import com.EinsteinDash.frontend.Main;
 import com.EinsteinDash.frontend.utils.Constants;
