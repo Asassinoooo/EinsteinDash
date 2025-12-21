@@ -45,6 +45,7 @@ public class GeneralBackgroundAnimation implements Disposable {
         update(delta);
 
         batch.begin();
+        batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // FIX: Ensure clean color state
         // 1. Main Background - Lowered 80px to match MenuScreen
         batch.draw(bgTexture, 0, -80, Constants.V_WIDTH, Constants.V_HEIGHT);
 

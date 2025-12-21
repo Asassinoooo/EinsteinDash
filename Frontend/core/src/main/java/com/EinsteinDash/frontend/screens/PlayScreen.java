@@ -143,6 +143,7 @@ public class PlayScreen extends ScreenAdapter implements GameObserver {
         // Render game objects
         game.batch.setProjectionMatrix(gameCam.combined);
         game.batch.begin();
+        game.batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // FIX: Reset color to prevent tinting from previous frame (HUD)
         player.draw(game.batch);
         levelFactory.draw(game.batch);
         game.batch.end();

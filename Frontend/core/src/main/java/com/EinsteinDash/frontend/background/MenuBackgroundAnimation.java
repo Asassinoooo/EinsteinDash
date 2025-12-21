@@ -122,6 +122,7 @@ public class MenuBackgroundAnimation implements Disposable {
         float bgY = -80;
         
         batch.begin();
+        batch.setColor(1, 1, 1, 1); // FIX: Reset color to White
         batch.draw(bgTexture, 0, bgY, Constants.V_WIDTH, Constants.V_HEIGHT);
         batch.end();
 

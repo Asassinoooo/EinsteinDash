@@ -195,6 +195,7 @@ public class LoginScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         game.batch.begin();
+        game.batch.setColor(1, 1, 1, 1); // FIX: Reset color state
          // Lower background by 80px to match MenuScreen
         game.batch.draw(backgroundTexture, 0, -80, Constants.V_WIDTH, Constants.V_HEIGHT);
         game.batch.end();
