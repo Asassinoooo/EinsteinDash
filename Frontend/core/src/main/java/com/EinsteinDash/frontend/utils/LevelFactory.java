@@ -111,8 +111,15 @@ public class LevelFactory {
 
             case "SPIKE":
                 Spike spike = spikePool.obtain();
-                spike.init(world, x, y);
+                spike.init(world, x, y, false);
                 activeSpikes.add(spike);
+                break;
+
+            case "SPIKE_UPSIDE":
+                Spike spikeUpside = spikePool.obtain();
+                // Kirim true (Terbalik)
+                spikeUpside.init(world, x, y, true);
+                activeSpikes.add(spikeUpside);
                 break;
 
             case "GOAL":

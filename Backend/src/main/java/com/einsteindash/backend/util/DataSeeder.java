@@ -17,56 +17,51 @@ public class DataSeeder {
                 l1.setLevelName("Stereo Madness");
                 l1.setLevelData("""
                             [
-                                {"type": "BLOCK", "x": 10, "y": 0},
-                                {"type": "BLOCK", "x": 11, "y": 0},
-                                {"type": "SPIKE", "x": 15, "y": 0},
-                                {"type": "BLOCK", "x": 20, "y": 1},
-                                {"type": "SPIKE", "x": 25, "y": 0},
-                                {"type": "COIN",  "x": 30, "y": 2},
-                                {"type": "SPIKE", "x": 40, "y": 0},
-                                {"type": "SPIKE", "x": 41, "y": 0},
-                                {"type": "SPIKE", "x": 42, "y": 0},
-                                {"type": "SPIKE", "x": 47, "y": 0},
-                                {"type": "PORTAL_SHIP", "x": 40, "y": 2},
-                                {"type": "SPIKE", "x": 47, "y": 0},
-                                {"type": "SPIKE", "x": 48, "y": 0},
-                                {"type": "SPIKE", "x": 49, "y": 0},
-                                {"type": "SPIKE", "x": 50, "y": 0},
-                                {"type": "PORTAL_BALL", "x": 51, "y": 3},
-                                {"type": "BLOCK", "x": 70, "y": 5},
-                                {"type": "BLOCK", "x": 71, "y": 5},
-                                {"type": "BLOCK", "x": 72, "y": 5},
-                                {"type": "BLOCK", "x": 73, "y": 5},
-                                {"type": "BLOCK", "x": 74, "y": 5},
-                                {"type": "PORTAL_UFO", "x": 80, "y": 3},
-                                {"type": "BLOCK", "x": 90, "y": 0},
-                                {"type": "BLOCK", "x": 90, "y": 1},
-                                {"type": "BLOCK", "x": 90, "y": 2},
-                                {"type": "BLOCK", "x": 90, "y": 3},
-                                {"type": "SPIKE", "x": 90, "y": 4},
-                                {"type": "PORTAL_WAVE", "x": 120, "y": 3},
-                                {"type": "BLOCK", "x": 135, "y": 0},
-                                {"type": "BLOCK", "x": 135, "y": 1},
-                                {"type": "BLOCK", "x": 135, "y": 2},
-                                {"type": "BLOCK", "x": 135, "y": 3},
-                                {"type": "SPIKE", "x": 135, "y": 4},
-                                {"type": "BLOCK", "x": 140, "y": 0},
-                                {"type": "BLOCK", "x": 141, "y": 1},
-                                {"type": "BLOCK", "x": 142, "y": 2},
-                                {"type": "BLOCK", "x": 143, "y": 3},
-                                {"type": "SPIKE", "x": 144, "y": 4},
-                                {"type": "PORTAL_ROBOT", "x": 150, "y": 3},
-                                {"type": "BLOCK", "x": 161, "y": 1},
-                                {"type": "BLOCK", "x": 162, "y": 1},
-                                {"type": "BLOCK", "x": 163, "y": 1},
-                                {"type": "SPIKE", "x": 164, "y": 2},
-                                {"type": "PORTAL_SPIDER", "x": 200, "y": 0},
-                                {"type": "BLOCK", "x": 161, "y": 1},
-                                {"type": "BLOCK", "x": 162, "y": 1},
-                                {"type": "BLOCK", "x": 163, "y": 1},
-                                {"type": "SPIKE", "x": 164, "y": 2},
-                                {"type": "GOAL",  "x": 250, "y": 0}
-                                ]
+                                {"type": "SPIKE", "x": 18, "y": 0},
+                                
+                                {"type": "SPIKE", "x": 38, "y": 0},
+                                {"type": "SPIKE", "x": 39, "y": 0},
+                                
+                                {"type": "SPIKE", "x": 65, "y": 0},
+                                
+                                {"type": "SPIKE", "x": 72, "y": 0},
+                                {"type": "SPIKE", "x": 73, "y": 0},
+
+                                {"type": "SPIKE", "x": 90, "y": 0},
+                                
+                                {"type": "SPIKE", "x": 109, "y": 0},
+                                {"type": "SPIKE", "x": 110 , "y": 0},
+                                
+                                {"type": "SPIKE", "x": 135, "y": 0},
+                                
+                                {"type": "PORTAL_SPEED_2", "x": 142, "y": 0},
+                                {"type": "PORTAL_SHIP", "x": 143, "y": 0},
+                                
+                                {"type": "BLOCK", "x": 150, "y": 0}, {"type": "SPIKE", "x": 150, "y": 1},
+                                {"type": "BLOCK", "x": 150, "y": 5}, {"type": "SPIKE_UPSIDE", "x": 150, "y": 4},
+                                {"type": "BLOCK", "x": 151, "y": 0},
+                                {"type": "BLOCK", "x": 151, "y": 5},
+                                {"type": "BLOCK", "x": 152, "y": 0},
+                                {"type": "BLOCK", "x": 152, "y": 5},
+                                {"type": "BLOCK", "x": 153, "y": 0},
+                                {"type": "BLOCK", "x": 153, "y": 5},
+                                {"type": "BLOCK", "x": 154, "y": 0},
+                                {"type": "BLOCK", "x": 154, "y": 5},
+                                {"type": "BLOCK", "x": 155, "y": 0}, {"type": "BLOCK", "x": 155, "y": 1},
+                                
+                                {"type": "BLOCK", "x": 156, "y": 0}, {"type": "BLOCK", "x": 156, "y": 1},
+                                
+                                {"type": "BLOCK", "x": 157, "y": 0}, {"type": "BLOCK", "x": 157, "y": 1}, {"type": "BLOCK", "x": 157, "y": 2},
+                                
+                                {"type": "BLOCK", "x": 158, "y": 0}, {"type": "BLOCK", "x": 158, "y": 1}, {"type": "BLOCK", "x": 158, "y": 2},
+                                
+                                {"type": "BLOCK", "x": 159, "y": 0}, {"type": "BLOCK", "x": 159, "y": 1}, {"type": "BLOCK", "x": 159, "y": 2},
+                                
+                                {"type": "BLOCK", "x": 160, "y": 0}, {"type": "BLOCK", "x": 160, "y": 1}, {"type": "BLOCK", "x": 160, "y": 2},
+                                
+                                {"type": "BLOCK", "x": 161, "y": 0}, {"type": "BLOCK", "x": 161, "y": 1}, {"type": "BLOCK", "x": 161, "y": 2}
+                                
+                            ]
                         """);
                 l1.setStars(1); // Easy
                 l1.setAudioTrackId(1001);
@@ -76,15 +71,24 @@ public class DataSeeder {
                 l2.setLevelName("Back on Track");
                 l2.setLevelData("""
                             [
-                                {"type": "SPIKE", "x": 10, "y": 0},
-                                {"type": "SPIKE", "x": 11, "y": 0},
-                                {"type": "BLOCK", "x": 15, "y": 0},
-                                {"type": "BLOCK", "x": 15, "y": 1},
-                                {"type": "SPIKE", "x": 20, "y": 0},
-                                {"type": "SPIKE", "x": 40, "y": 0},
-                                {"type": "SPIKE", "x": 41, "y": 0},
-                                {"type": "SPIKE", "x": 47, "y": 0},
-                                {"type": "GOAL",  "x": 60, "y": 0}
+                                {"type": "SPIKE", "x": 18, "y": 0},
+                                {"type": "SPIKE", "x": 33, "y": 0},
+                                {"type": "SPIKE", "x": 34, "y": 0},
+                                
+                                {"type": "SPIKE", "x": 49, "y": 0},
+                                {"type": "SPIKE", "x": 50, "y": 0},
+                                {"type": "BLOCK", "x": 51, "y": 0},
+                                {"type": "SPIKE", "x": 52, "y": 0},
+                                {"type": "SPIKE", "x": 53, "y": 0},
+                                {"type": "SPIKE", "x": 54, "y": 0},
+                                {"type": "SPIKE", "x": 55, "y": 0},
+                                {"type": "SPIKE", "x": 55, "y": 1},
+                                {"type": "SPIKE", "x": 56, "y": 0},
+                                {"type": "SPIKE", "x": 57, "y": 0},
+                                {"type": "SPIKE", "x": 58, "y": 0},
+                                {"type": "BLOCK", "x": 59, "y": 0},
+                                {"type": "BLOCK", "x": 59, "y": 1},
+                                {"type": "BLOCK", "x": 59, "y": 2}
                             ]
                         """);
                 l2.setStars(2); // Normal
