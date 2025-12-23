@@ -1,1 +1,79 @@
-# EinsteinDash
+<div align="center">
+
+# Einstein Dash
+
+> "A challenging rhythm platformer built with Java & LibGDX.
+> A student project tribute to Geometry Dash."
+
+**Einstein Dash** adalah *fan-game* dan proyek tribut untuk genre *rhythm platformer*, dikembangkan sebagai **Tugas Akhir / Final Project Mata Kuliah OOP**.
+
+Game ini dibangun dari nol menggunakan **Java** dan framework **LibGDX**, bertujuan untuk mendemonstrasikan penerapan konsep pemrograman objek, manajemen memori, dan fisika game 2D. Meskipun terinspirasi kuat oleh mekanik klasik *Geometry Dash*, EinsteinDash menghadirkan sentuhan visual neon futuristik dan tantangan presisi yang kami rancang sendiri.
+
+---
+
+!["Gameplay Demo"](https://i.imgur.com/SagCeXH.gif)
+<p style="color: #888; font-size: 0.8em;">Gameplay Example</p>
+
+</div>
+
+### Experiment with Physics
+
+Kendalikan "Einstein" yang berubah wujud menjadi berbagai partikel dengan mekanik unik:
+
+*   **The Cube**: Mode dasar, lompat untuk menghindari rintangan.
+*   **The Ship**: Tahan spasi untuk terbang melawan gravitasi, lepas untuk turun.
+*   **The Ball**: Klik untuk membalikkan gravitasi dari lantai ke atap (dan sebaliknya).
+*   **The UFO**: Melakukan lompatan kecil di udara (double/triple jump) seperti burung.
+*   **The Wave**: Bergerak zig-zag diagonal dengan kecepatan tinggi.
+*   **The Robot**: Tahan tombol untuk melompat lebih tinggi dan jauh.
+*   **The Spider**: Teleportasi instan ke lantai atau atap terdekat.
+
+<br>
+
+### Fitur Project
+
+*   **Academic Showcase**: Dibuat sebagai portofolio coding untuk menunjukkan kemampuan Logic & Algorithm.
+*   **Global Leaderboard**: Sistem backend terintegrasi untuk menyimpan skor tertinggi secara online.
+*   **Custom Engine**: Menggunakan library **Box2D** untuk menangani simulasi fisika dan deteksi tabrakan (collision) yang akurat.
+*   **Guest Mode**: Dukungan teknis untuk bermain langsung tanpa perlu mendaftar akun.
+
+<br>
+
+### Controls
+
+*   **SPACE / Klik Kiri**: Lompat atau Terbang (Action).
+*   **ESC**: Pause Menu.
+
+---
+
+### Credits & Disclaimer
+
+Kami mengerjakan proyek ini secara bersama-sama, sehingga tidak ada peran khusus seperti *Main Programmer, Game Designer, Artist*, dan sejenisnya
+
+*   **Arkaan Pasya S.**
+    *   Level Designer
+    *   Physic Logic Game
+    *   Melengkapi Frontend
+*   **M. Dhiya'ulhaq**
+    *   Mencari Assets Game
+    *   UI/UX Designer
+    *   Melengkapi Frontend
+*   **Perry Tjahya**
+    *   Database & Backend
+    *   Fix Bug Collider
+    *   Melengkapi Frontend
+*   **Vincenzo Fabian T.**
+    *   Rangka awal Frontend dan Backend
+    *   Physic Logic Game
+    *   Offline/Guest Mode
+    *   Melengkapi Frontend
+*   **Engine**: LibGDX Framework
+*   **Assets**: Visual Assets generated using Nano Banana (AI).
+*   **Music**: [https://www.youtube.com/watch?v=1Gc7Cpn7c-4](https://www.youtube.com/watch?v=1Gc7Cpn7c-4)
+*   **GitHub**: [https://github.com/Asassinoooo/EinsteinDash](https://github.com/Asassinoooo/EinsteinDash)
+*   **Itch.oi**: [https://hikariakira.itch.io/einstein-dash](https://hikariakira.itch.io/einstein-dash)
+
+<p style="font-size: 0.8em; opacity: 0.7;">
+    <em>Disclaimer: This is a non-commercial student project created for educational purposes.<br>
+    All mechanics are inspired by RobTop Games' Geometry Dash.</em>
+</p>
