@@ -11,8 +11,7 @@ Game ini dibangun dari nol menggunakan **Java** dan framework **LibGDX**, bertuj
 
 ---
 
-!["Gameplay Demo"](https://i.imgur.com/SagCeXH.gif)
-<p style="color: #888; font-size: 0.8em;">Gameplay Example</p>
+![gameplay](https://github.com/user-attachments/assets/bfc7a6ab-fd50-4e72-909b-18e823569614)
 
 </div>
 
@@ -54,20 +53,24 @@ Kami mengerjakan proyek ini secara bersama-sama, sehingga tidak ada peran khusus
     *   Level Designer
     *   Physic Logic Game
     *   Melengkapi Frontend
+      <br>
 *   **M. Dhiya'ulhaq**
     *   Mencari Assets Game
     *   UI/UX Designer
     *   Melengkapi Frontend
+      <br>
 *   **Perry Tjahya**
     *   Database & Backend
     *   Fix Bug Collider
     *   Melengkapi Frontend
+      <br>
 *   **Vincenzo Fabian T.**
     *   Rangka awal Frontend dan Backend
     *   Physic Logic Game
     *   Offline/Guest Mode
     *   Melengkapi Frontend
-*   **Engine**: LibGDX Framework
+      <br>
+*   **Engine**: LibGDX Framework & SpringBoot Framework
 *   **Assets**: Visual Assets generated using Nano Banana (AI).
 *   **Music**: [https://www.youtube.com/watch?v=1Gc7Cpn7c-4](https://www.youtube.com/watch?v=1Gc7Cpn7c-4)
 *   **GitHub**: [https://github.com/Asassinoooo/EinsteinDash](https://github.com/Asassinoooo/EinsteinDash)
