@@ -15,7 +15,10 @@ Game ini dibangun dari nol menggunakan **Java** dan framework **LibGDX**, bertuj
 
 </div>
 
+<div align="center">
+   
 ### Experiment with Physics
+</div>
 
 Kendalikan "Einstein" yang berubah wujud menjadi berbagai partikel dengan mekanik unik:
 
@@ -29,7 +32,10 @@ Kendalikan "Einstein" yang berubah wujud menjadi berbagai partikel dengan mekani
 
 <br>
 
+<div align="center">
+   
 ### Fitur Project
+</div>
 
 *   **Academic Showcase**: Dibuat sebagai portofolio coding untuk menunjukkan kemampuan Logic & Algorithm.
 *   **Global Leaderboard**: Sistem backend terintegrasi untuk menyimpan skor tertinggi secara online.
@@ -38,14 +44,20 @@ Kendalikan "Einstein" yang berubah wujud menjadi berbagai partikel dengan mekani
 
 <br>
 
+<div align="center">
+   
 ### Controls
+</div>
 
 *   **SPACE / Klik Kiri**: Lompat atau Terbang (Action).
 *   **ESC**: Pause Menu.
 
 ---
 
+<div align="center">
+   
 ### Credits & Disclaimer
+</div>
 
 Kami mengerjakan proyek ini secara bersama-sama, sehingga tidak ada peran khusus seperti *Main Programmer, Game Designer, Artist*, dan sejenisnya
 
@@ -74,9 +86,11 @@ Kami mengerjakan proyek ini secara bersama-sama, sehingga tidak ada peran khusus
 *   **Assets**: Visual Assets generated using Nano Banana (AI).
 *   **Music**: [https://www.youtube.com/watch?v=1Gc7Cpn7c-4](https://www.youtube.com/watch?v=1Gc7Cpn7c-4)
 *   **GitHub**: [https://github.com/Asassinoooo/EinsteinDash](https://github.com/Asassinoooo/EinsteinDash)
-*   **Itch.oi**: [https://hikariakira.itch.io/einstein-dash](https://hikariakira.itch.io/einstein-dash)
+*   **Itch.io**: [https://hikariakira.itch.io/einstein-dash](https://hikariakira.itch.io/einstein-dash)
 
+<div align="center">
 <p style="font-size: 0.8em; opacity: 0.7;">
     <em>Disclaimer: This is a non-commercial student project created for educational purposes.<br>
     All mechanics are inspired by RobTop Games' Geometry Dash.</em>
 </p>
+</div>
